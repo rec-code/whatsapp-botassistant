@@ -1,0 +1,1 @@
+C:\Users\Unipar\AppData\Local\Programs\Python\Python37\python.exe D:/python-projects/whatsbot-personal/src/main.py
