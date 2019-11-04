@@ -14,9 +14,15 @@ class BotWikipedia:
             bot.get_message('Wikipedia Pesquisas desabilitado temporariamente')
             return True
 
-        message = message.strip()
-        search = wikipedia.search(message)
-        temp = False
+        search = None
+
+        try:
+            message = message.strip()
+            search = wikipedia.search(message)
+            temp = False
+        except:
+            temp_message = 'Algo errado aconteceu, tente novamente!'
+            return True
 
         if len(search) == 1:
             temp_message = search[0]

@@ -7,10 +7,9 @@ class BotWatson():
 	enabled = True
 
 	def __init__(self):
-        # you have to put your IBM Watson api credentials to have the other bot with watson integration
 		self.watson_preferences = {
-			'api_key': 'YOURWATSONKEY',
-			'assistant_id': 'YOURWATSONASSISTANTID',
+			'api_key': 'aBb2Tc2EfUSlm1UGEPK-UpyOGJ_1DyVa0cFlsyyi2zDu',
+			'assistant_id': '5eb2d5db-652f-4e2e-8378-3e4ec9ee6e3b',
 			'service_url': 'https://gateway.watsonplatform.net/assistant/api',
 			'version': '2019-02-28'
 		}
@@ -26,11 +25,7 @@ class BotWatson():
 
 		self.service.set_service_url(self.watson_preferences['service_url'])
 
-		print('DEBUG CORE: WATSON SERVICE STARTED: ', self.service)
-
-		self.session = self.create_session()
-
-		print('DEBUG CORE: WATSON SESSION CREATED: ', self.session)
+		print('DEBUG CORE: WATSON SERVICE STARTED')
 
 		# response = service.delete_session(
 		# assistant_id='5eb2d5db-652f-4e2e-8378-3e4ec9ee6e3b',
@@ -70,12 +65,13 @@ class BotWatson():
 			self.answer(message, bot)
 
 	def create_session(self):
-		print('DEBUG CORE: CREATING ANOTHER WATSON SESSION')
+		print('DEBUG CORE: CREATING A WATSON SESSION')
 
 		return self.service.create_session(
 			assistant_id=self.watson_preferences['assistant_id'],
 		).get_result()
 
+		print('DEBUG CORE: WATSON SESSION CREATED, ID: ', self.session['session_id'])
 
 	def command(self, arg):
 		self.enabled = True if arg == 'true' else False

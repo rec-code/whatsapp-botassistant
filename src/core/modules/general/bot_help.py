@@ -5,7 +5,7 @@ class BotHelp:
     bot_name = 'Ônikka'
 
     help_list = [
-        'Olá, me chamo ' + bot_name + ', sou uma assistente virtual para o WhatsApp\n',
+        'Olá, me chamo ' + bot_name + ', sou uma assistente virtual para o WhatsApp.\n',
         'Essa é a lista de comandos disponíveis para mim.\n',
         'Digite: *Oni* e as opções abaixo ou o que você quiser, caso queira apenas trocar uma ideia:\n',
         'Digite: *marcar* ou *role* *\'nome do role\'* *\'local do rolê\'*(o nome e local do rolê devem ser entre aspas simples, ou vai bugar total) *data*(divido com a barra(/), ano opcional caso seja o ano atual e.g: 16/11 = 16/11/2019) *horário*(e.g: 4:20, formato em 24 horas) *tempo para alerta*(em minutos, caso queira ser lembrado antes e depois do horário)\n',
