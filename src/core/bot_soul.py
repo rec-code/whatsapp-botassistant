@@ -345,7 +345,7 @@ class CoreBot:
                 temp_current_conversation = d['name_conversation']
 
                 if arg.lower() in temp_current_conversation and temp_current_conversation not in mouth.conversations:
-                    mouth.conversations.append(d)
+                    mouth.conversations.append(temp_current_conversation)
 
                     if not loading:
                         mouth.save_database(arg.lower())

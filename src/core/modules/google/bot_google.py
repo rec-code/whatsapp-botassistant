@@ -5,8 +5,8 @@ class BotGoogle:
 	enabled = True
 
 	googleInfos = {
-		'apiKey': 'AIzaSyBKJiimMSk4whtMxkg8gK4-P_o4Urnt-K0',
-		'searchEngineId': '016705264550393402367:gbqcolescwo'
+		'apiKey': 'YOURKEY',
+		'searchEngineId': 'YOURSENGINE'
 	}
 	
 	googleService = build(

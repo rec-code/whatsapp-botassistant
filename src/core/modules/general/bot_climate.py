@@ -21,13 +21,13 @@ class BotClimate:
 
         if mode == 'now':
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/weather/locale/6259/current?token=e89a9dfc71c314242b10d99ff380ab4a')
+                'http://apiadvisor.climatempo.com.br/api/v1/weather/locale/6259/current?token=YOURTOKEN')
         elif mode == 'region':
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/forecast/region/sul?token=e89a9dfc71c314242b10d99ff380ab4a')
+                'http://apiadvisor.climatempo.com.br/api/v1/forecast/region/sul?token=YOURTOKEN')
         else:
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/city?name=Umuarama&state=PR/days/15?token=e89a9dfc71c314242b10d99ff380ab4a')
+                'http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/city?name=Umuarama&state=PR/days/15?token=YOURTOKEN')
 
         if req:
             climates = json.loads(req.text)

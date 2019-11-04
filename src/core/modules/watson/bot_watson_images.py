@@ -8,7 +8,7 @@ class BotWatsonImages():
 
 	def __init__(self):
 		self.watson_preferences = {
-			'api_key': 'F_GNQQm4IsXp3ba_K0Rc7R8-i-ly0icD6wlv5PeYvSVf',
+			'api_key': 'YOURKEY',
 			'version': '2018-03-19'
 		}
 

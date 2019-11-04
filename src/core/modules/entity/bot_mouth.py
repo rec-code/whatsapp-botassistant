@@ -190,7 +190,7 @@ class BotMouth:
             ]
         },
         {
-            'hour' : datetime(2019, 1, 1, 17, 30),
+            'hour' : datetime(2019, 1, 1, 17, 45),
             'search' : 'motivação descanso',
             'random' : False,
             'sended' : False,

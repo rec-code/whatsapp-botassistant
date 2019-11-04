@@ -8,8 +8,8 @@ class BotWatson():
 
 	def __init__(self):
 		self.watson_preferences = {
-			'api_key': 'aBb2Tc2EfUSlm1UGEPK-UpyOGJ_1DyVa0cFlsyyi2zDu',
-			'assistant_id': '5eb2d5db-652f-4e2e-8378-3e4ec9ee6e3b',
+			'api_key': 'YOURKEY',
+			'assistant_id': 'YOURASSISTANTID',
 			'service_url': 'https://gateway.watsonplatform.net/assistant/api',
 			'version': '2019-02-28'
 		}

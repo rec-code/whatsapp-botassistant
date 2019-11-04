@@ -21,7 +21,7 @@ class BotNews:
             return
 
         req = requests.get(
-            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=f47086f0e00d43be9fe271e7e56b51db')
+            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=YOURKEY')
         noticias = json.loads(req.text)
 
         if noticias['articles']:
@@ -48,14 +48,14 @@ class BotNews:
 
         if top_br:
             req = requests.get(
-                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=f47086f0e00d43be9fe271e7e56b51db')
+                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=YOURKEY')
         else:
             if random.randint(0, 2) == 0:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=f47086f0e00d43be9fe271e7e56b51db')
+                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=YOURKEY')
             else:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=f6fdb7cb0f2a497d92dbe719a29b197f')
+                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=YOURKEY')
 
         noticias = json.loads(req.text)
 
