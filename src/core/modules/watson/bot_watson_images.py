@@ -1,14 +1,14 @@
 import json
 from ibm_watson import VisualRecognitionV3
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from core.bot_modules_core import BotModulesCore 
 
-class BotWatsonImages():
-	print('DEBUG CORE: Initializing Watson Image Bot...')
-	enabled = True
+class BotWatsonImages(BotModulesCore):
 
-	def __init__(self):
+	def __init__(self, name):
+		super(BotWatsonImages, self).__init__(name)
 		self.watson_preferences = {
-			'api_key': 'YOURKEY',
+			'api_key': 'Yourkey',
 			'version': '2018-03-19'
 		}
 

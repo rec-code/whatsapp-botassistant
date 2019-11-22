@@ -1,0 +1,16 @@
+class BotSupply:
+    print('DEBUG CORE: Initializing Base Bot...')
+    enabled = True
+    black_list = []
+    
+    def base(self, bot):
+        if not self.enabled:
+            return
+
+    def command(self, arg):
+        self.enabled = True if arg == 'true' else False
+    
+    def is_in_black_list(self, current):
+        return True if current in self.black_list else False
+
+    print('DEBUG CORE: Base Bot Initialized...')

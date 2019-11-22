@@ -1,15 +1,16 @@
 import json
 from ibm_watson import AssistantV2
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from core.bot_modules_core import BotModulesCore 
 
-class BotWatson():
-	print('DEBUG CORE: Initializing Watson Bot...')
-	enabled = True
+class BotWatson(BotModulesCore):
 
-	def __init__(self):
+	def __init__(self, name):
+		super(BotWatson, self).__init__(name)
+		
 		self.watson_preferences = {
-			'api_key': 'YOURKEY',
-			'assistant_id': 'YOURASSISTANTID',
+			'api_key': 'yourkey',
+			'assistant_id': 'yourassistantid',
 			'service_url': 'https://gateway.watsonplatform.net/assistant/api',
 			'version': '2019-02-28'
 		}
@@ -28,14 +29,14 @@ class BotWatson():
 		print('DEBUG CORE: WATSON SERVICE STARTED')
 
 		# response = service.delete_session(
-		# assistant_id='5eb2d5db-652f-4e2e-8378-3e4ec9ee6e3b',
+		# assistant_id='yourkey',
 		# session_id=session['session_id']
 		# ).get_result()
 
 		# print('SESSION DELETED')
 
 	def answer(self, message, bot):
-		if not self.enabled:
+		if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
 			bot.get_message('Onikkatson desabilitado temporariamente')
 			return
 
@@ -51,11 +52,11 @@ class BotWatson():
 
 			text_result = response['output']['generic'][0]['text']
 
-			if len(response['output']['generic']) > 1 and response['output']['generic'][1]['response_type'] == 'image':
-				image_source = response['output']['generic'][1]['source']
-				bot.google_b().search_image(text_result, True, image_source, bot)
-			else:
-				bot.get_message(text_result)
+			# if len(response['output']['generic']) > 1 and response['output']['generic'][1]['response_type'] == 'image':
+			# 	image_source = response['output']['generic'][1]['source']
+			# 	bot.google_b().search_image(text_result, True, image_source, bot)
+			# else:
+			# 	bot.get_message(text_result)
 
 			print('THE BOT SAYS: ', response)
 
@@ -75,3 +76,6 @@ class BotWatson():
 
 	def command(self, arg):
 		self.enabled = True if arg == 'true' else False
+
+	def is_in_black_list(self, current):
+		return True if current in self.black_list else False

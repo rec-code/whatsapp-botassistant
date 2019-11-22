@@ -2,13 +2,15 @@
 from datetime import datetime
 import random, time
 import xml.etree.cElementTree as ET
+from core.bot_modules_core import BotModulesCore 
 
-class BotMouth:
-    print('DEBUG CORE: Initializing Mouth Bot...')
-    enabled = True
+class BotMouth(BotModulesCore):
+    def __init__(self, name):
+        super(BotMouth, self).__init__(name)
+
     get_database_diary_path = "databases/diary.xml"
 
-    def start(self, bot):    
+    def start(self, bot):
         tree = ET.parse(self.get_database_diary_path)
         root = tree.getroot()
 
@@ -31,9 +33,8 @@ class BotMouth:
         tree.write(self.get_database_diary_path, encoding="UTF-8", xml_declaration=True)
         print('DEBUG LOG:', 'Conversation [name: %s] - saved to diary database' % name)
 
-
     def answer(self, message, bot):
-        if not self.enabled:
+        if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
             return
 
         # try:
@@ -66,47 +67,47 @@ class BotMouth:
             'random' : True,
             'sended' : False,
             'messages': [
-                'Oi lindos, mais um dia amanhecendo hein...',
+                'Fala bando de arrombado...',
                 'Uma boa pa nois famia, uma manhã nova no horizonte\nUm dia top pa nois smc',
-                'Fala meus confrades, mais um amanhecer top começando, uma boa pa noisssxx',
+                'Fala cus da meia noite, mais um amanhecer top começando, uma boa pa noisssxx',
                 'Uma boa pa nois famia, um bom amanhecer pa noizxx\nPeguem os incesos, a cadeira, o madeira e va comtempla mais um dia começando',
                 'Mais um dia nascendo no horizonte'
             ]
         },
-        {
-            'hour' : datetime(2019, 1, 1, 7, 0),
-            'search' : 'bom dia',
-            'random' : True,
-            'sended' : False,
-            'messages': [
-                'Bom dia meus amigos, a tia ama vocês',
-                'Uma boa pa nois famia linda da tia\nUm dia top pa nois smc',
-                'Fala meus netinhos, mais um dia top começando, uma boa pa noisssxx lindos',
-                'Uma boa pa nois famia linda, um bom dia da tia Oni',
-                'Bom dia, a vó Onik ama vocês'
-            ]
-        },
-        {
-            'hour' : datetime(2019, 1, 1, 8, 0),
-            'search' : 'motivação trabalho',
-            'random' : True,
-            'sended' : False,
-            'messages': [
-                'Bom dia meus amigos, a tia ama vocês, um bom trabalho a todos',
-                'Uma boa pa nois famia linda da tia, come a marmita e bom trampo\nUm dia top pa nois smc',
-                'Fala meus netinhos, bom trabalho e não esquece do boné de tricó, uma boa pa noisssxx lindos',
-                'Uma boa pa nois famia linda, um bom trabalho. Beijo da tia Oni',
-                'Bom dia, bom trabalho, a vó Onik ama vocês'
-            ]
-        },
-        {
-            'hour' : datetime(2019, 1, 1, 9, 0),
-            'search' : 'bolsonaro',
-            'random' : True,
-            'sended' : False,
-            'messages': [
-            ]
-        },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 7, 0),
+        #     'search' : 'bom dia',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages': [
+        #         'Bom dia meus amigos, a tia ama vocês',
+        #         'Uma boa pa nois famia linda da tia\nUm dia top pa nois smc',
+        #         'Fala meus netinhos, mais um dia top começando, uma boa pa noisssxx lindos',
+        #         'Uma boa pa nois famia linda, um bom dia da tia Oni',
+        #         'Bom dia, a vó Onik ama vocês'
+        #     ]
+        # },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 8, 0),
+        #     'search' : 'motivação trabalho',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages': [
+        #         'Bom dia meus amigos, a tia ama vocês, um bom trabalho a todos',
+        #         'Uma boa pa nois famia linda da tia, come a marmita e bom trampo\nUm dia top pa nois smc',
+        #         'Fala meus netinhos, bom trabalho e não esquece do boné de tricó, uma boa pa noisssxx lindos',
+        #         'Uma boa pa nois famia linda, um bom trabalho. Beijo da tia Oni',
+        #         'Bom dia, bom trabalho, a vó Onik ama vocês'
+        #     ]
+        # },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 9, 45),
+        #     'search' : 'bolsonaro',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages': [
+        #     ]
+        # },
         # {
         #     'hour' : datetime(2019, 1, 1, 10, 0),
         #     'search' : 'café',
@@ -121,43 +122,44 @@ class BotMouth:
         #     ]
         # },
         # {
-        #     'hour' : datetime(2019, 1, 1, 11, 0),
+        #     'hour' : datetime(2019, 1, 1, 11, 15),
         #     'search' : 'tira gosto',
         #     'random' : True,
         #     'sended' : False,
         #     'messages': [
-        #         'Já já tem almoço, caraaaai',
-        #         'Uma saladinha no almoço, não se esqueçam gente'
+        #         'Já já tem almoço, fé amigos',
+        #         'Uma saladinha no almoço, não se esqueçam gente',
+        #         'Cheiro de delícia vindo <3'
+        #     ]
+        # },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 12, 20),
+        #     'search' : 'almoço',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages': [
+        #         'Hora do almoço',
+        #         'Uma boa pa nois no almoço, famia\nTomem água e escovem os dentes depois do almoço, é o bicho',
+        #         'Uma boa no almoço',
+        #         'Bom almoço',
+        #         'Um ótimo almoço a todos'
+        #     ]
+        # },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 13, 0),
+        #     'search' : 'descanso',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages': [
+        #         'Pós almoço, buchin chei',
+        #         'Uma boa pa nois famia',
+        #         'Fala meus confrades, uma boa pa noisssxx depois desse armocin',
+        #         'Uma boa pa nois famia, um bom uso das drogas pós almoço',
+        #         'Um tiroliro pa nois famia after almoço'
         #     ]
         # },
         {
-            'hour' : datetime(2019, 1, 1, 12, 20),
-            'search' : 'almoço',
-            'random' : True,
-            'sended' : False,
-            'messages': [
-                'Hora do almoço',
-                'Uma boa pa nois no almoço, famia\nTomem água e escovem os dentes depois do almoço, é o bicho',
-                'Uma boa no almoço',
-                'Bom almoço',
-                'Um ótimo almoço a todos'
-            ]
-        },
-        {
-            'hour' : datetime(2019, 1, 1, 13, 0),
-            'search' : 'descanso',
-            'random' : True,
-            'sended' : False,
-            'messages': [
-                'Pós almoço, buchin chei',
-                'Uma boa pa nois famia',
-                'Fala meus confrades, uma boa pa noisssxx depois desse armocin',
-                'Uma boa pa nois famia, um bom uso das drogas pós almoço',
-                'Um tiroliro pa nois famia after almoço'
-            ]
-        },
-        {
-            'hour' : datetime(2019, 1, 1, 15, 15),
+            'hour' : datetime(2019, 1, 1, 14, 00),
             'search' : 'bolsonaro',
             'random' : True,
             'sended' : False,
@@ -189,21 +191,21 @@ class BotMouth:
                 '4:vinte'
             ]
         },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 18, 00),
+        #     'search' : 'motivação descanso',
+        #     'random' : False,
+        #     'sended' : False,
+        #     'messages': [
+        #         # 'Boa galera, mais um dia se passando, espero que tenham tido um bom dia e que o trampo foi massa\n\
+        #         # Para os que vão começar a trampa agora, uma boa pu ceis mulekagem',
+        #         # 'Um bom descanso',
+        #         # '5:45 p.m already???? Quem vai bate um happy hour jaja?? CHAMA EU HEEEEIN',
+        #         # 'Ooopa, ainda bem que já já vou embora para poder tomar um banho online',
+        #     ]
+        # },
         {
-            'hour' : datetime(2019, 1, 1, 17, 45),
-            'search' : 'motivação descanso',
-            'random' : False,
-            'sended' : False,
-            'messages': [
-                # 'Boa galera, mais um dia se passando, espero que tenham tido um bom dia e que o trampo foi massa\n\
-                # Para os que vão começar a trampa agora, uma boa pu ceis mulekagem',
-                # 'Um bom descanso',
-                # '5:30 p.m already???? Quem vai bate um happy hour jaja?? CHAMA EU HEEEEIN',
-                # 'Ooopa, ainda bem que já já vou embora para poder tomar um banho online',
-            ]
-        },
-        {
-            'hour' : datetime(2019, 1, 1, 18, 30),
+            'hour' : datetime(2019, 1, 1, 18, 45),
             'search' : 'amor frases',
             'random' : False,
             'sended' : False,
@@ -216,19 +218,19 @@ class BotMouth:
                 '<3<3<3<3'
             ]
         },
-        {
-            'hour' : datetime(2019, 1, 1, 19, 0),
-            'search' : 'boa noite',
-            'random' : True,
-            'sended' : False,
-            'messages' : [
-                'Boa noite rapaziada',
-                'Uma boa pa nois famia\nNoitinha top pa nois smc',
-                'Fala meus confrades, mais um dia se passando ai',
-                'Uma boa pa nois famia, uma boa noite',
-                'Boa noite'
-            ]
-        },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 19, 0),
+        #     'search' : 'boa noite',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages' : [
+        #         'Boa noite rapaziada',
+        #         'Uma boa pa nois famia\nNoitinha top pa nois smc',
+        #         'Fala meus confrades, mais um dia se passando ai',
+        #         'Uma boa pa nois famia, uma boa noite',
+        #         'Boa noite'
+        #     ]
+        # },
         # {
         #     'hour' : datetime(2019, 1, 1, 20, 15),
         #     'search' : '',
@@ -242,19 +244,19 @@ class BotMouth:
         #         'Boa noite'
         #     ]
         # },
-        {
-            'hour' : datetime(2019, 1, 1, 22, 0),
-            'search' : 'bons sonhos',
-            'random' : True,
-            'sended' : False,
-            'messages' : [
-                'Bons sonhos gente, vou dormir\nzzzzzoas <3',
-                'Um bom descanso pa noixx <3',
-                'Que a noite seja regada a bons sonhos <3',
-                'Boa noite meus amigos <3',
-                'Se cuidem amores, até mais <3',
-            ]
-        },
+        # {
+        #     'hour' : datetime(2019, 1, 1, 22, 0),
+        #     'search' : 'bons sonhos',
+        #     'random' : True,
+        #     'sended' : False,
+        #     'messages' : [
+        #         'Bons sonhos gente, vou dormir\nzzzzzoas <3',
+        #         'Um bom descanso pa noixx <3',
+        #         'Que a noite seja regada a bons sonhos <3',
+        #         'Boa noite meus amigos <3',
+        #         'Se cuidem amores, até mais <3',
+        #     ]
+        # },
     ]
 
     conversations = []
@@ -287,6 +289,8 @@ class BotMouth:
         return self.bolso_messages[random.randint(0, len(self.bolso_messages) - 1 )] % time_remaing.days
 
     def events(self, bot):
+        return
+        
         temp_now = datetime.now()
 
         if len(self.conversations) != 0:
@@ -306,7 +310,7 @@ class BotMouth:
                         if temp_search == 'bolsonaro':
                             temp_message += '\n%s' % self.get_bolsonaro_time_left()
 
-                        if temp_search == 'motivação trabalho' or temp_search == 'motivação descanso':
+                        if temp_search == 'amor frases' or temp_search == 'motivação descanso':
                             if temp_now.weekday() == 4:
                                 temp_search = 'sexta feira'
                                 temp_message += '\n' + self.friday_messages[random.randint(0, len(self.friday_messages)-1 )]
@@ -320,8 +324,7 @@ class BotMouth:
                             bot.get_message(temp_message)
                             time.sleep(.5)
 
-                        if temp_search != 'bolsonaro':
-                            bot.get_image(temp_search)
+                        # bot.get_image(temp_search)
 
                     eve['sended'] = True
 
@@ -335,9 +338,3 @@ class BotMouth:
                 eve['sended'] = False
 
             self.reseted = True
-
-
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-        
-    print('DEBUG CORE: Mouth Bot Initialized...')

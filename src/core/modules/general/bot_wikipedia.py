@@ -1,16 +1,18 @@
 import wikipedia, time
 
+from core.bot_modules_core import BotModulesCore 
+
 wikipedia.set_lang("pt")
 
 
-class BotWikipedia:
-    print('DEBUG CORE: Initializing Wikipedia Bot...')
-    enabled = True
+class BotWikipedia(BotModulesCore):
+    def __init__(self, name):
+        super(BotWikipedia, self).__init__(name)
 
     wiki_request = {}
 
     def wiki(self, message, bot):
-        if not self.enabled:
+        if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
             bot.get_message('Wikipedia Pesquisas desabilitado temporariamente')
             return True
 
@@ -31,12 +33,17 @@ class BotWikipedia:
         elif len(search) > 1:
             count = 1
             self.wiki_request = {}
-            temp_message = 'Foram encontrados ' + str(len(search)) + ' resultados sobre ' + '*'+message+'*' + '.' +'\nDigite o número em que deseja obter a info:\n'
+            bot.get_message_with_one_space('Foram encontrados ' + str(len(search)) + ' resultados sobre ' + '*'+message+'*' + '.' +' ')
+            bot.send_message()
 
             for se in search:
-                temp_message += str(count) + ' - ' + se.title() + '\n'
+                temp_message = '*%s* - *%s*' % (str(count), se.title())
+                bot.get_message_with_one_space(temp_message)
                 self.wiki_request[count] = se.title()
                 count += 1
+
+            bot.send_message()
+            temp_message = 'Digite o número em que deseja obter a info™'
         else:
             temp_message = 'Não foi encontrado nenhum resultado, tente escrever igual ao ser humano.'
             temp = True
@@ -46,18 +53,14 @@ class BotWikipedia:
         return temp
 
     def select_wikipedia(self, option, bot):
-        # temp_option = 0
-
         try:
             temp_option = int(option)
         except:
-            temp_message = 'Opção inválida, tente novamente'
             if 'cancelar' in option or 'deixa baixo' in option:
-                temp_message = 'Entendido, cancelado'
-                bot.get_message(temp_message)
+                bot.get_message('Pode pá, truta')
                 return True
 
-            bot.get_message(temp_message)
+            bot.get_message('Opção inválida, tente novamente')
             return False
 
         if temp_option < len(self.wiki_request):
@@ -70,13 +73,10 @@ class BotWikipedia:
     def show_wikipedia(self, page, bot):
         temp_page = wikipedia.page(page)
 
-        temp_message = temp_page.title
+        temp_message = '*_%s_*' % temp_page.title
         temp_message += '\n' + wikipedia.summary(page)
-        temp_message += '\n' + 'Veja mais em: ' + temp_page.url
 
         bot.get_message(temp_message)
-
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-
-    print('DEBUG CORE: Wikipedia Bot Initialized...')
+        bot.get_image(temp_page.title)
+        time.sleep(.5)
+        bot.get_message('*Veja mais em:* %s' % temp_page.url)

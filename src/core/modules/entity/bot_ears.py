@@ -1,10 +1,11 @@
 import time, wget
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from core.bot_modules_core import BotModulesCore 
 
-class BotEars:
-    print('DEBUG CORE: Initializing Ears Bot...')
-    enabled = True
+class BotEars(BotModulesCore):
+    def __init__(self, name):
+        super(BotEars, self).__init__(name)
 
     def listen_all_contacts(self, bot):
         if not self.enabled or bot.learning_b():
@@ -12,7 +13,7 @@ class BotEars:
 
         #contacts = bot.driver.find_elements_by_class_name('X7YrQ')
         contacts = bot.driver.find_elements_by_xpath('(//DIV[@class=\'_2WP9Q\'])')
-        contacts.reverse()
+        # contacts.reverse()
         # new_messages = bot.driver.find_elements_by_xpath('//SPAN[@class=\'P6z4j\']')
         bot.contacts_numbers = len(contacts)
         # print(bot.contacts_numbers)
@@ -28,9 +29,10 @@ class BotEars:
 
             if bot.get_conversation_by_name(temp_name_conversation) == None:
                 bot.add_conversation(cont, temp_name_conversation)
-            
+
             if len(cont.find_elements_by_css_selector('span.P6z4j')) == 1 and bot.get_conversation()['name_conversation'] != temp_name_conversation:
                 bot.set_conversation(temp_name_conversation)
+                time.sleep(.5)
                 break
 
         # for mes in new_messages:
@@ -65,6 +67,8 @@ class BotEars:
                 user_message = last_message.find_element_by_css_selector('span.selectable-text').text
             except NoSuchElementException:
                pass
+            except StaleElementReferenceException:
+                pass
  
                 # if self.current_timeout < self.timeout_allowed_listen:
                 #     self.current_timeout = self.current_timeout + 1
@@ -98,8 +102,3 @@ class BotEars:
             self.current_timeout = 1
 
         return user_message
-
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-        
-    print('DEBUG CORE: Ears Bot Initialized...')

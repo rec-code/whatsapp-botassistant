@@ -1,12 +1,12 @@
 import time
+from core.bot_modules_core import BotModulesCore 
 
-
-class BotBrain:
-    print('DEBUG CORE: Initializing Brain Bot...')
-    enabled = True
+class BotBrain(BotModulesCore):
+    def __init__(self, name):
+        super(BotBrain, self).__init__(name)
 
     def learn(self, message, bot):
-        if not self.enabled:
+        if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
             bot.get_message('Cérebro desabilitado temporariamente')
             return
 
@@ -30,8 +30,3 @@ class BotBrain:
             bot.get_message('Huuuum, vlw truta, vai servir no futuro tipo uma bagona monstra')
         else:
             bot.get_message(error_message)
-
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-
-    print('DEBUG CORE: Brain Bot Initialized...')

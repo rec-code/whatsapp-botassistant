@@ -1,9 +1,11 @@
 import requests, json, time, random
 
+from core.bot_modules_core import BotModulesCore 
 
-class BotNews:
-    print('DEBUG CORE: Initializing News Bot...')
-    enabled = True
+
+class BotNews(BotModulesCore):
+    def __init__(self, name):
+        super(BotNews, self).__init__(name)
 
     cache_responses = [
         'Fala mestre',
@@ -16,12 +18,12 @@ class BotNews:
     ]
 
     def news_tech(self, bot):
-        if not self.enabled:
+        if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
             bot.get_message('Notícias de Tecnologias desabilitadas temporariamente')
             return
 
         req = requests.get(
-            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=YOURKEY')
+            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=yourkey')
         noticias = json.loads(req.text)
 
         if noticias['articles']:
@@ -31,9 +33,11 @@ class BotNews:
             for news in noticias['articles']:
                 titulo = news['title']
                 link = news['url']
-                new = '*%s.* %s\n' % (titulo, link)
+                titulo = '*%s.*' % titulo
 
-                bot.get_message(new)
+                bot.get_message_with_two_spaces(titulo)
+                bot.get_message_with_two_spaces(link)
+                bot.send_message()
             # except:
             #     time.sleep(1)
             #     print('DEBUG LOG: Can\'t get tech news, retrying: %s' % user_message)
@@ -42,41 +46,33 @@ class BotNews:
             bot.get_message('Não consegui pega as noticias de tech truta, foi mal, tenta de novo ae...')
 
     def news(self, top_br, bot):
-        if not self.enabled:
+        if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
             bot.get_message('Notícias desabilitadas temporariamente')
             return
 
         if top_br:
             req = requests.get(
-                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=YOURKEY')
+                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=yourkey')
         else:
             if random.randint(0, 2) == 0:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=YOURKEY')
+                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=yourkey')
             else:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=YOURKEY')
+                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=yourkey')
 
         noticias = json.loads(req.text)
 
-        # try:
         if noticias['articles']:
             bot.get_message(self.cache_responses[random.randint(0, len(self.cache_responses)-1 )] + ', as noticias ae:\n')
 
             for news in noticias['articles']:
                 titulo = news['title']
                 link = news['url']
-                new = '*%s.* %s\n' % (titulo, link)
+                titulo = '*%s.*' % titulo
 
-                bot.get_message(new)
+                bot.get_message_with_two_spaces(titulo)
+                bot.get_message_with_two_spaces(link)
+                bot.send_message()
         else:
             bot.get_message('Não consegui pega as noticias, foi mal meu pia, tenta de novo ae...')
-        # except:
-            # time.sleep(1)
-            # print('DEBUG LOG: Can\'t get news, retrying: %s' % user_message)
-            # self.news(top_br, bot)
-            
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-
-    print('DEBUG CORE: News Bot Initialized...')
