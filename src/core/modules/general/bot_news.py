@@ -1,4 +1,5 @@
 import requests, json, time, random
+import xml.etree.cElementTree as ET
 
 from core.bot_modules_core import BotModulesCore 
 
@@ -6,6 +7,20 @@ from core.bot_modules_core import BotModulesCore
 class BotNews(BotModulesCore):
     def __init__(self, name):
         super(BotNews, self).__init__(name)
+
+    get_database_credentials_path = "databases/credentials.xml"
+
+    api_key_news = ''
+    apiv2_key_news = ''
+
+    tree = ET.parse(get_database_credentials_path)
+    root = tree.getroot()
+    
+    for cred in root:
+        if cred.attrib['name'] == 'news':
+            api_key_news = cred[0].text
+            apiv2_key_news = cred[1].text
+            print('DEBUG CORE: News credentials loaded')
 
     cache_responses = [
         'Fala mestre',
@@ -23,7 +38,7 @@ class BotNews(BotModulesCore):
             return
 
         req = requests.get(
-            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=yourkey')
+            'https://newsapi.org/v2/top-headlines?country=br&category=technology&pageSize=6&apiKey=%s' % self.api_key_news)
         noticias = json.loads(req.text)
 
         if noticias['articles']:
@@ -52,14 +67,14 @@ class BotNews(BotModulesCore):
 
         if top_br:
             req = requests.get(
-                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=yourkey')
+                'https://newsapi.org/v2/top-headlines?country=br&pageSize=6&apiKey=%s' % self.api_key_news)
         else:
             if random.randint(0, 2) == 0:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=yourkey')
+                    'https://newsapi.org/v2/top-headlines?sources=google-news-br&pageSize=6&apiKey=%s' % self.api_key_news)
             else:
                 req = requests.get(
-                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=yourkey')
+                    'https://newsapi.org/v2/top-headlines?sources=globo&pageSize=6&apiKey=%s' % self.apiv2_key_news)
 
         noticias = json.loads(req.text)
 

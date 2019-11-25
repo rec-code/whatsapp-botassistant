@@ -1,5 +1,6 @@
 # import wolframalpha, time
 from datetime import datetime
+from datetime import timedelta  
 import random, time
 import xml.etree.cElementTree as ET
 from core.bot_modules_core import BotModulesCore 
@@ -259,6 +260,73 @@ class BotMouth(BotModulesCore):
         # },
     ]
 
+    cigarrets_sentences = [
+        """Aí meu, aí meu, tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Gente boa, gente boa, tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Aí véi, aí véi, tem cigaro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Terezinha!!!!!! Tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Tia, tia, tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Fala, mestre !!! Tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Fala, Comandante !!!! Tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Bom dia !!!!!! Tem cigarro aí?
+        Cigarro. Tem cigarro aí?""",
+
+        """Ei moço, você gosta de poesia? Não?
+        Tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """Você ouvinte é a nossa meta,
+        Pensando em você é que procuramos fazer o melhor.
+        Domingo é dia de esporte.
+        O domingo é nosso !!!!
+        Tem cigarro aí?
+        Cigarro !! Tem cigarro aí?""",
+
+        """Oh pai !!!! Tem cigarro aí?
+        Cigarro. Tem cigarro aí?""",
+
+        """Se você amanheceu sem disposição, dor de cabeça,
+        Azia, mal estar,
+        Tem cigarro aí? Cigarro. Tem cigarro aí?""",
+
+        """Nós já vamos lhe atender.
+        Espere mais um pouquinho.
+        Anote o número do protocolo.
+        Tem cigarro aí? Cigarro. Tem cigarro aí?""",
+
+        """Ah que pena. Eu não posso falar com você agora.
+        Mas não fique chateado.
+        Deixe seu nome e telefone
+        Que assim que eu puder eu ligo de volta pra você.
+        Tem cigarro aí?
+        Cigarro? Tem cigarro aí?""",
+
+        """E Jesus chegou para Lázaro
+        E ordenou: Levanta-te !!!
+        E Lázaro, dentro da sepultura,
+        Abriu os “óio divagazinhu”
+        Pensou em Barbacena e falou:
+        Tem cigarro aí? Cigarro? Tem cigarro aí?""",
+
+        """Tem cigarro aí, porra ?"""
+    ]
+    
+    current_time = datetime.now() + timedelta(seconds=random.randint(60, 21600))  
+
     conversations = []
     reseted = False
     date_bolsonaro_over = datetime(2022, 12, 31, 0, 0)
@@ -288,53 +356,53 @@ class BotMouth(BotModulesCore):
 
         return self.bolso_messages[random.randint(0, len(self.bolso_messages) - 1 )] % time_remaing.days
 
-    def events(self, bot):
-        return
-        
+    def events(self, bot):        
         temp_now = datetime.now()
 
         if len(self.conversations) != 0:
-            for eve in self.my_events:
-                time_remaing = temp_now - eve['hour']
+            #for eve in self.my_events:
+            #time_remaing = temp_now - eve['hour']
+            time_remaing = temp_now - self.current_time
+            
+            if time_remaing.seconds <= 5:
+                for conv in self.conversations:
+                    bot.set_conversation(conv)
+                    temp_message = self.cigarrets_sentences[random.randint(0, len(self.cigarrets_sentences) - 1)]
 
-                if time_remaing.seconds <= 5 and not eve['sended']:
-                    for conv in self.conversations:
-                        bot.set_conversation(conv)
-                        temp_message = ''
+                    self.current_time += timedelta(seconds=random.randint(60, 21600))
+                    # if len(eve['messages']) != 0:
+                    #     temp_message = eve['messages'][random.randint(0, len(eve['messages'])-1 )]
 
-                        if len(eve['messages']) != 0:
-                            temp_message = eve['messages'][random.randint(0, len(eve['messages'])-1 )]
+                    # temp_search = eve['search']
 
-                        temp_search = eve['search']
+                    # if temp_search == 'bolsonaro':
+                    #     temp_message += '\n%s' % self.get_bolsonaro_time_left()
 
-                        if temp_search == 'bolsonaro':
-                            temp_message += '\n%s' % self.get_bolsonaro_time_left()
+                    # if temp_search == 'amor frases' or temp_search == 'motivação descanso':
+                    #     if temp_now.weekday() == 4:
+                    #         temp_search = 'sexta feira'
+                    #         temp_message += '\n' + self.friday_messages[random.randint(0, len(self.friday_messages)-1 )]
+                    #     elif temp_now.weekday() == 3:
+                    #         temp_search = 'quinta feira'
+                    #         temp_message += '\n' + self.thursday_messages[random.randint(0, len(self.thursday_messages)-1 )]
 
-                        if temp_search == 'amor frases' or temp_search == 'motivação descanso':
-                            if temp_now.weekday() == 4:
-                                temp_search = 'sexta feira'
-                                temp_message += '\n' + self.friday_messages[random.randint(0, len(self.friday_messages)-1 )]
-                            elif temp_now.weekday() == 3:
-                                temp_search = 'quinta feira'
-                                temp_message += '\n' + self.thursday_messages[random.randint(0, len(self.thursday_messages)-1 )]
+                    time.sleep(.5)
 
+                    if temp_message != '':
+                        bot.get_message(temp_message)
                         time.sleep(.5)
 
-                        if temp_message != '':
-                            bot.get_message(temp_message)
-                            time.sleep(.5)
+                    # bot.get_image(temp_search)
 
-                        # bot.get_image(temp_search)
+                # eve['sended'] = True
 
-                    eve['sended'] = True
-
-                    if self.reseted:
-                        self.reseted = False
+                # if self.reseted:
+                #     self.reseted = False
     
-        time_remaing_reset = temp_now - datetime(2019, 1, 1, 0, 0)
+        # time_remaing_reset = temp_now - datetime(2019, 1, 1, 0, 0)
 
-        if time_remaing_reset.seconds <= 5 and not self.reseted:
-            for eve in self.my_events:
-                eve['sended'] = False
+        # if time_remaing_reset.seconds <= 5 and not self.reseted:
+        #     for eve in self.my_events:
+        #         eve['sended'] = False
 
-            self.reseted = True
+        #     self.reseted = True

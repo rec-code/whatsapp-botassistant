@@ -1,9 +1,22 @@
 from core.bot_modules_core import BotModulesCore 
 import requests, json, time, random
+import xml.etree.cElementTree as ET
 
 class BotClimate(BotModulesCore):
     def __init__(self, name):
         super(BotClimate, self).__init__(name)
+
+    get_database_credentials_path = "databases/credentials.xml"
+
+    api_key_climate = ''
+
+    tree = ET.parse(get_database_credentials_path)
+    root = tree.getroot()
+
+    for cred in root:
+        if cred.attrib['name'] == 'climate':
+            api_key_climate = cred[0].text
+            print('DEBUG CORE: Climate credentials loaded')
 
     cache_responses = [
         'Fala mestre',
@@ -22,17 +35,16 @@ class BotClimate(BotModulesCore):
 
         if mode == 'now':
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/weather/locale/6259/current?token=yourtoken')
+                'http://apiadvisor.climatempo.com.br/api/v1/weather/locale/6259/current?token=%s' % self.api_key_climate)
         elif mode == 'region':
             if region == '':
                 region = 'sul'
                 
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/forecast/region/%s?token=yourtoken' % region)
+                'http://apiadvisor.climatempo.com.br/api/v1/forecast/region/%s?token=%s' % (region, self.api_key_climate))
         else:
             req = requests.get(
-                'http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/city?name=Umuarama&state=PR/days/15?token=yourtoken')
-
+                'http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/city?name=Umuarama&state=PR/days/15?token=%s' % self.api_key_climate)
 
         if req:
             climates = json.loads(req.text)

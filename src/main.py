@@ -21,7 +21,7 @@ class MainBot:
         self.printi('Waiting for WhatsApp web to open...', 'core')
 
     def update(self):
-        if not self.listening:
+        if not self.listening and not self.wiking:
             self.bot.listen(1)
 
         if self.wiking:
@@ -74,6 +74,7 @@ class MainBot:
                     # 'onikk?', 'onikk,', ',onikk', ',onikk,', 'onikk.', '.onikk', '.onikk.', 'onikk',
                     # 'onikka?', 'onikka,', ',onikka', ',onikka,', 'onikka.', '.onikka', '.onikka.','onikka',
                 )
+
                 user_message = self.replace_words(user_message, '', 
                     'domika', 'domika?', 'domika,', ',domika', ',domika,', 'domika.', '.domika', '.domika.', 
                     'domi?', 'domi,', ',domi', ',domi,', 'domi.', '.domi', '.domi.', 'domi',
@@ -89,6 +90,8 @@ class MainBot:
                 if self.contains_word(temp_user_message, 'cmd', 'command'):
                     #self.waiting_cmd = True
                     self.bot.send_cmd(temp_user_message, True, False)
+                elif self.contains_word(temp_user_message, 'ajuda', 'help') and (len(temp_user_message.split()) == 1 or len(temp_user_message.split()) == 2):
+                    self.bot.get_help(temp_user_message.split()[0] if len(temp_user_message.split()) == 2 else '')
                 elif 'aprender' in temp_user_message or 'ensinar' in temp_user_message:
                     self.bot.set_learn(user_message)
                 elif 'wiki' in temp_user_message or 'wikipedia' in temp_user_message:
@@ -168,8 +171,6 @@ class MainBot:
                     temp_user_message = self.replace_words(temp_user_message, '', 'twitter', 'tt', 'twit', 'twt')
 
                     self.bot.get_video_or_spotify(temp_user_message, 'twitter.com')
-                elif 'help' in temp_user_message or 'ajuda' in temp_user_message:
-                    self.bot.get_help()
                 else:
                     self.bot.get_answer(user_message, False)
             # elif temp_called_watson:

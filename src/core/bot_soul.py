@@ -77,6 +77,12 @@ modules = [
 
 class CoreBot:
     print('DEBUG CORE: Initializing Soul Bot..')
+    last_message = ''
+    learning = False
+    current_learn_time = 0
+    max_time_to_wait_learn = 10
+    current_count_conversation = 0
+    password = '@roizz3'
 
 # Initalization Region
     def __init__(self, bot_name, main):
@@ -90,10 +96,12 @@ class CoreBot:
 
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
         self.root_path = os.getcwd()
+        
         self.bot_main = main
 
         self.bot_main.printi('Root Path: ' + self.root_path, 'core')
         self.bot_main.printi('Core Path: ' + self.dir_path, 'core')
+        self.load_configs()
 
         # self.trainer = ChatterBotCorpusTrainer(self.bot)
 
@@ -103,18 +111,17 @@ class CoreBot:
 
         # self.set_train('train_models')
 
+        self.chrome = self.dir_path+'\\chromedriver.exe'
+        self.options = webdriver.ChromeOptions()
+        self.options.add_argument(r"user-data-dir="+self.root_path+"\\profile\\wpp")
+        self.driver = webdriver.Chrome(self.chrome, chrome_options=self.options)
+        self.driver.get('https://web.whatsapp.com/')
+
         self.current_conversation = {'id_conversation': 0, 'name_conversation': '', 'conversation': '', 'conversation_role_ammount': 0}
         self.last_version = '1.0.0.0'
         self.bot_version = '1.0.1.0'
         self.contacts_numbers = 0
         self.loaded_diary = False
-
-        self.chrome = self.dir_path+'\chromedriver.exe'
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument(r"user-data-dir="+self.dir_path+"\profile\wpp")
-        self.driver = webdriver.Chrome(self.chrome, chrome_options=self.options)
-        self.driver.get('https://web.whatsapp.com/')
-        # self.driver.implicitly_wait(12)
 
     def update(self):
         if self.learning:
@@ -159,11 +166,17 @@ class CoreBot:
             return wiki.select_wikipedia(message, self)
 
 # Help Region
-    def get_help(self):
+    def get_help(self, module):
         elem = self.get_message_element()
-        temp_help_str = ''.join(aid.help_list)
+        
+        temp_help_str = ''.join(aid.get_help(module))
 
-        for p in temp_help_str.split('\~'):
+        if temp_help_str == None:
+            self.get_message('Então meu... Módulo não encontrado, digite o nome corretamente')
+            self.get_message_with_one_space('Disponíveis: eventos, intera, aprender, noticia, wiki, google, media\nDigite <ajuda> <nome do módulo> para ver a lista de comandos desse módulo')
+            return
+
+        for p in temp_help_str.split('\\~'):
             for part in p.split('\n'):
                 self.get_message_with_two_spaces(part)
             self.send_message()
@@ -213,12 +226,6 @@ class CoreBot:
             self.trainer.train(conversations)
 
 # Bot Responses Region
-    last_message = ''
-    learning = False
-    current_learn_time = 0
-    max_time_to_wait_learn = 10
-    current_count_conversation = 0
-
     def learning_b(self):
         return self.learning
 
@@ -323,10 +330,10 @@ class CoreBot:
             self.set_conversation(cv_name)
             cv.click()
 
-        # if len(conversations_to_listen) == self.contacts_numbers and not self.loaded_diary:
-        #     self.loaded_diary = True
-        #     self.bot_main.printi('Maybe new messages, refreshing and updating diary')
-        #     mouth.start(self)
+        if len(conversations_to_listen) == self.contacts_numbers and not self.loaded_diary:
+            self.loaded_diary = True
+            self.bot_main.printi('Maybe new messages, refreshing and updating diary')
+            mouth.start(self)
 
         self.bot_main.printi('[id: %s - name: %s - events: %s] - conv added' % (temp_current_id, cv_name, temp_role_ammount), 'inline')
         self.current_count_conversation += 1
@@ -412,17 +419,26 @@ class CoreBot:
     def google_b(self):
         return google
 
-    password = '@roizz3'
+    def load_configs(self):
+        temp_path = 'databases/configs.xml'
 
-    try:
-        tree = ET.parse('databases/configs.xml')
-        root = tree.getroot()
-        for configs in root:
-            password = configs.attrib['password']
+        try:
+            tree = ET.parse(temp_path)
+            root = tree.getroot()
 
-        self.bot_main.printi('Configs loaded')
-    except:
-        pass
+            for configs in root:
+                password = configs.attrib['password']
+
+            temp_log = 'Configs loaded'
+        except FileNotFoundError:
+            root = ET.Element('config')
+
+            ET.SubElement(root, 'conf', password=self.password)
+
+            ET.ElementTree(root).write(temp_path, encoding="UTF-8", xml_declaration=True)
+            temp_log = 'Config file not found, creating one'
+
+        self.bot_main.printi(temp_log)
 
 # Admin Command Region
     def send_cmd(self, cmd, front, loading):
@@ -496,10 +512,9 @@ class CoreBot:
             # except:
             root = ET.Element('config')
 
-            password = ET.SubElement(root, 'pass', password=arg)
+            ET.SubElement(root, 'conf', password=arg)
 
-            tree = ET.ElementTree(root)
-            tree.write('databases/configs.xml', encoding="UTF-8", xml_declaration=True)
+            ET.ElementTree(root).write('databases/configs.xml', encoding="UTF-8", xml_declaration=True)
             self.bot_main.printi('Password changed successfully to %s' % arg)
             return
 

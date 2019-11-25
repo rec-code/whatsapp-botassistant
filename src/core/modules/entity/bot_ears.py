@@ -31,6 +31,7 @@ class BotEars(BotModulesCore):
                 bot.add_conversation(cont, temp_name_conversation)
 
             if len(cont.find_elements_by_css_selector('span.P6z4j')) == 1 and bot.get_conversation()['name_conversation'] != temp_name_conversation:
+                time.sleep(.5)
                 bot.set_conversation(temp_name_conversation)
                 time.sleep(.5)
                 break

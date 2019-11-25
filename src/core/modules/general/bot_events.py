@@ -299,10 +299,13 @@ class BotEvent(BotModulesCore):
                 elif temp_remaing_days.days == 1:
                     temp_message_date = 'Amanhã'
 
-                temp_label = 'Rolê: *' + message[1].strip() + \
-                             '*\nLocal: *' + temp_place + \
-                              '*\nMarcado para: *' + temp_message_date + \
-                             '*\nHorário: *' + date_time[1] + '*'
+                temp_label = 'Rolê: *%s*' % message[1].strip()
+                
+                if temp_place != '':
+                    temp_label += '\nLocal: *%s*' % temp_place
+                
+                temp_label += '\nMarcado para: *%s*' % temp_message_date
+                temp_label += '\nHorário: *%s*' % date_time[1]
 
                 temp_remaind = 0
 
@@ -352,11 +355,11 @@ class BotEvent(BotModulesCore):
                 tree.write(self.get_database_role_path, encoding="UTF-8", xml_declaration=True)
             except:
                 response = 'Mano..... Tu digitou uma caca tão grande, que eu nem entendi velho, namoral...'
-        elif len(message) == 1 and 'role' in message[0].lower() or 'rolê' in message[0].lower():
+        elif len(message) == 1 and 'role' in message[0].lower() or 'rolê' in message[0].lower() or 'lembrete' in message[0].lower():
             response = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )] + '... Não tem nenhum role marcado \n' \
                        'Digite: domi marcar <\'nome do role\'> <\'local\'> <data> <horário> _<tempo lembrete>_\~' \
-                       '*\'nome do rolê\'* entre aspas simples\n' \
-                       '*\'local\'* também entre aspas simples\n' \
+                       '*\'nome do rolê(ou lembrete)\'* entre aspas simples\n' \
+                       '*\'local\'* também entre aspas simples(caso queira criar apenas um lembrete, coloque as aspas vazias *\'\'*\n' \
                        '*data* (em formato padrão, separado por barra(*/*), ex: _15/10/2020_, ano opcional(pegará o ano atual, caso não especificado))\n' \
                        '*horário* (em formato padrão, separado hora e minutos por dois pontos(*:*), ex: _16:20_, formato em 24 horas)\n' \
                        '*tempo* (em *minutos* para alertar antes e depois do horário do evento(opcional, n inclua caso não queira ser avisado))\n\~' \
@@ -526,7 +529,8 @@ class BotEvent(BotModulesCore):
 
                     bot.send_message()
                     break
-            elif time_remaing_second.days >= 1:
+            
+            if time_remaing_second.days >= 1:
                 print('DEBUG LOG: Role %s deletado' % r)
                 bot.set_conversation(r['conversation'])
                 bot.get_message('Salve meus raposos, lembra do role:')
