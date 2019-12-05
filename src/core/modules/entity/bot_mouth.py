@@ -5,11 +5,14 @@ import random, time
 import xml.etree.cElementTree as ET
 from core.bot_modules_core import BotModulesCore 
 
-class BotMouth(BotModulesCore):
-    def __init__(self, name):
-        super(BotMouth, self).__init__(name)
+# Mine
+from functions import Functions
 
-    get_database_diary_path = "databases/diary.xml"
+class BotMouth(BotModulesCore):
+    def __init__(self, name, bot):
+        super(BotMouth, self).__init__(name, bot)
+
+        self.get_database_diary_path = self.bot.root_path + "databases/diary.xml"
 
     def start(self, bot):
         tree = ET.parse(self.get_database_diary_path)
@@ -18,10 +21,10 @@ class BotMouth(BotModulesCore):
         for conv in root:
             temp_conv_name = conv.attrib['conv_name']
             # roles.append({'conv_name': temp_conv_name})
+            self.printi('%s - loaded from diary database' % temp_conv_name)
             bot.send_cmd('cmd diary %s %s' % (temp_conv_name, bot.password), False, True)
-            print('DEBUG LOG:', 'Conversation [name: %s] - loaded from diary database' % temp_conv_name)
 
-    def save_database(self, name):
+    def save_database_in(self, name):
         try:
             tree = ET.parse(self.get_database_diary_path)
             root = tree.getroot()
@@ -32,7 +35,7 @@ class BotMouth(BotModulesCore):
 
         tree = ET.ElementTree(root)
         tree.write(self.get_database_diary_path, encoding="UTF-8", xml_declaration=True)
-        print('DEBUG LOG:', 'Conversation [name: %s] - saved to diary database' % name)
+        self.printi('%s - saved to diary database' % name)
 
     def answer(self, message, bot):
         if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
@@ -325,7 +328,7 @@ class BotMouth(BotModulesCore):
         """Tem cigarro aí, porra ?"""
     ]
     
-    current_time = datetime.now() + timedelta(seconds=random.randint(60, 21600))  
+    current_time = datetime.now() + timedelta(seconds=random.randint(60, 3000))  
 
     conversations = []
     reseted = False
@@ -356,7 +359,9 @@ class BotMouth(BotModulesCore):
 
         return self.bolso_messages[random.randint(0, len(self.bolso_messages) - 1 )] % time_remaing.days
 
-    def events(self, bot):        
+    def events(self, bot):
+        return
+        
         temp_now = datetime.now()
 
         if len(self.conversations) != 0:

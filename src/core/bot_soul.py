@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, time, random
+import os, time, random, platform
 import xml.etree.cElementTree as ET
 
 from chatterbot.trainers import ListTrainer, ChatterBotCorpusTrainer
@@ -8,8 +8,11 @@ from chatterbot import ChatBot
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, ElementClickInterceptedException
 # logging.basicConfig(level=logging.INFO)
+
+# Mine
+from functions import Functions
 
 # Bot Modules
 from core.modules.entity.bot_brain import BotBrain
@@ -27,56 +30,11 @@ from core.modules.general.bot_wikipedia import BotWikipedia
 from core.modules.google.bot_google import BotGoogle
 from core.modules.google.bot_media import BotMedia
 
-# from core.modules.watson.bot_watson import BotWatson
-# from core.modules.watson.bot_watson_images import BotWatsonImages
+from core.modules.misc.bot_game import BotGame
 
-# Modules Started
-brain = BotBrain('Brain')
-ears = BotEars('Ears')
-mouth = BotMouth('Mouth')
+class CoreBot(Functions):
+    conversations_to_listen = []
 
-climate = BotClimate('Climate')
-events = BotEvent('Events')
-aid = BotHelp('Help')
-images = BotImages('Images')
-news = BotNews('News')
-supply = BotSupply('Supply')
-wiki = BotWikipedia('Wiki')
-
-google = BotGoogle('Google')
-media = BotMedia('Media')
-
-# watson = BotWatson('Watson')
-# watson_images = BotWatsonImages('Watson Images')
-
-# WolframAlpha Configuration
-#app_id = "U32UR2-EXW6X24J7A"
-
-# Bot Configuration
-conversations_to_listen = []
-
-modules = [
-    brain,
-    ears,
-    mouth,
-
-    climate,
-    events,
-    aid,
-    images,
-    news,
-    supply,
-    wiki,
-    
-    google,
-    media,
-
-    # watson,
-    # watson_images    
-]
-
-class CoreBot:
-    print('DEBUG CORE: Initializing Soul Bot..')
     last_message = ''
     learning = False
     current_learn_time = 0
@@ -86,6 +44,10 @@ class CoreBot:
 
 # Initalization Region
     def __init__(self, bot_name, main):
+        self.system = platform.system()
+        self.printi('The bot is starting in the %s system' % self.system)
+        self.printi('Initializing Soul Bot', 'core')
+
         self.bot = ChatBot(
             bot_name,
             logic_adapters=[
@@ -95,13 +57,14 @@ class CoreBot:
             )
 
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.root_path = os.getcwd()
+        self.root_path = os.getcwd() + '/'
         
         self.bot_main = main
 
-        self.bot_main.printi('Root Path: ' + self.root_path, 'core')
-        self.bot_main.printi('Core Path: ' + self.dir_path, 'core')
+        self.printi('Root Path: ' + self.root_path, 'core')
+        self.printi('Core Path: ' + self.dir_path, 'core')
         self.load_configs()
+        self.load_modules()
 
         # self.trainer = ChatterBotCorpusTrainer(self.bot)
 
@@ -111,17 +74,30 @@ class CoreBot:
 
         # self.set_train('train_models')
 
-        self.chrome = self.dir_path+'\\chromedriver.exe'
+        self.printi('Setting up the web browser', 'core')
+
+        chrome_driver_path = 'chromedriver.exe'
+        #chrome_driver_path = 'geckodriver'
+        profile_path = 'wpp_%s' % self.system.lower()
+
+        self.chrome = self.dir_path+'/%s' % chrome_driver_path
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument(r"user-data-dir="+self.root_path+"\\profile\\wpp")
+        #self.options = webdriver.FirefoxOptions()
+
+        self.options.add_argument(r"user-data-dir="+self.root_path+"profile/" + profile_path)
+        self.printi('Opening the browser and WhatsApp web address', 'core')
         self.driver = webdriver.Chrome(self.chrome, chrome_options=self.options)
         self.driver.get('https://web.whatsapp.com/')
 
-        self.current_conversation = {'id_conversation': 0, 'name_conversation': '', 'conversation': '', 'conversation_role_ammount': 0}
+        self.current_conversation = {
+            'name_conversation': ''
+            }
+
         self.last_version = '1.0.0.0'
         self.bot_version = '1.0.1.0'
         self.contacts_numbers = 0
         self.loaded_diary = False
+        self.printi('Soul Bot Initialized', 'core')
 
     def update(self):
         if self.learning:
@@ -134,47 +110,111 @@ class CoreBot:
 
 # Supply Region
     def get_supply(self, message):
-        supply.supply(message, self)
+        self.supply.supply(message, self)
+
+# Game Region
+    def get_game(self, user, number, inp, game_id):
+        user = user.strip()
+        inp = inp.strip()
+        number = number.strip()
+        self.game.game(user, number, inp, self.current_conversation, game_id)
+
+# Inter Message Region
+    def get_inter_message(self, dic_message):
+        temp_to = dic_message['to_conv']
+
+        conv = self.get_conversation_by_name(temp_to)
+
+        if conv is None:
+            self.get_message('Contato ou grupo(*%s*) não encontrado, tente novamente.' % temp_to)
+            return
+
+        self.set_conversation(temp_to)
+
+        temp_from = dic_message['from']
+        temp_anon = True if temp_from.lower() == 'anon' else False
+        temp_number = dic_message['number']
+        temp_to_who = dic_message['to']
+        temp_subject = dic_message['subject']
+        temp_message = dic_message['message']
+
+        temp_who = 'Anônimo' if temp_anon else '(*%s*) @%s' % (temp_from, temp_number)
+        label = 'Telegrama' if random.randint(0, 2) == 0 else 'Trombeta'
+
+        self.get_message_with_one_space('|------*%s da Ônika*------|' % label)
+        self.get_message_with_keys('De: %s' % temp_who)
+
+        if not temp_anon:
+            self.mention_someone()
+
+        self.get_space()
+
+        self.get_message_with_keys('Para: @%s' % temp_to_who)
+
+        if temp_to_who.lower() != 'geral': 
+            self.mention_someone()
+        
+        self.get_space()
+        self.get_message_with_one_space_before_and_after('*%s*' % temp_subject)
+        self.get_message('_%s_' % temp_message)
+
+    def mention_someone(self):
+        to = None
+        clicked = False
+
+        while to is None and not clicked:
+            try:
+                temp_container = self.driver.find_element_by_css_selector('div._15EmS')
+                to = temp_container.find_element_by_css_selector('div._1Yz8K')
+
+                try:
+                    to.click()
+                    clicked = True
+                except (StaleElementReferenceException, ElementClickInterceptedException) as e:
+                    pass
+            except NoSuchElementException:
+                self.printi('I did not find the container or contact to click')
 
 # Events Region
     def get_events(self, message):
-        events.events(message, self)
+        self.events.events(message, self)
 
     def check_events_remainder(self):
-        events.check_events(self)
+        self.events.check_events(self)
 
 # Bot Events Region
     def check_bot_events(self):
-        mouth.events(self)
+        self.mouth.events(self)
 
 # News Region
     def get_news(self, action_id, top_br):
         if action_id == 0:
-            news.news_tech(self)
+            self.news.news_tech(self)
         else:
-            news.news(top_br, self)
+            self.news.news(top_br, self)
 
 # Climate Region
     def get_climate(self, mode, region):
-        climate.climate(mode, region, self)
+        self.climate.climate(mode, region, self)
 
 # Wikipedia Region
     def get_wikipedia(self, action_id, message):
         if action_id == 0:
-            return wiki.wiki(message, self)
+            return self.wiki.wiki(message, self)
         else:
-            return wiki.select_wikipedia(message, self)
+            return self.wiki.select_wikipedia(message, self)
 
 # Help Region
     def get_help(self, module):
-        elem = self.get_message_element()
-        
-        temp_help_str = ''.join(aid.get_help(module))
+        helps = self.aid.get_help(module)
 
-        if temp_help_str == None:
+        if helps == None:
             self.get_message('Então meu... Módulo não encontrado, digite o nome corretamente')
-            self.get_message_with_one_space('Disponíveis: eventos, intera, aprender, noticia, wiki, google, media\nDigite <ajuda> <nome do módulo> para ver a lista de comandos desse módulo')
+            self.get_message_with_two_spaces('Disponíveis: eventos, intera, aprender, noticia, wiki, google, media, game e trombeta')
+            self.get_message('Digite *ajuda* _nome do módulo_ para ver a lista de comandos desse módulo')
             return
+        
+        temp_help_str = ''.join(helps)
 
         for p in temp_help_str.split('\\~'):
             for part in p.split('\n'):
@@ -186,37 +226,38 @@ class CoreBot:
     #     return images.try_download_image(images_links, self)
 
     def try_download_image(self, images_links, amount):
-        return images.try_download_image(images_links, amount, self)
+        return self.images.try_download_image(images_links, amount, self)
 
     def get_elements_images(self, images_names, message):
         temp_images = []
 
         for image_name in images_names:
-            image_name = image_name.replace('/', '\\')
+            if self.system != 'Linux':
+                image_name = image_name.replace('/', '\\')
             temp_images.append(image_name)
 
-        images.get_elements_images(temp_images, self, message)
+        self.images.get_elements_images(temp_images, self, message)
 
 # Google Region
     def get_image(self, message):
-        google.search_image(message, self)
+        self.google.search_image(message, self)
 
     def get_search(self, message):
-        google.search(message, self)
+        self.google.search(message, self)
 
     def get_video_or_spotify(self, message, domain_search):
-        media.search(message, domain_search, self)
+        self.media.search(message, domain_search, self)
 
 # Bot Listen Region
     def listen(self, action_id):
         if action_id == 0:
-            return ears.listen_contact(self)
+            return self.ears.listen_contact(self)
         else:
-            ears.listen_all_contacts(self)
+            self.ears.listen_all_contacts(self)
 
 # Bot Learning Region
     def set_learn(self, message):
-        brain.learn(message, self)
+        self.brain.learn(message, self)
 
     def set_train(self, folder_name):
         temp_path_folder = self.dir_path + '/' + folder_name
@@ -265,10 +306,10 @@ class CoreBot:
                     self.learning = True
                     self.get_message(self.cache_responses_ask[random.randint(0, len(self.cache_responses_ask)-1 )] + ('?' * random.randint(0, 10)) )
                 else:
-                    self.last_message = message
-                    mouth.answer(message, self)
+                    self.current_conversation['last_message'] = message
+                    self.mouth.answer(message, self)
             else:
-                self.trainer.train([self.last_message, message])
+                self.trainer.train([self.current_conversation['last_message'], message])
                 self.get_message(self.cache_responses[random.randint(0, len(self.cache_responses)-1 )])
                 self.learning = False
 
@@ -294,6 +335,8 @@ class CoreBot:
         ActionChains(self.driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
         ActionChains(self.driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
         #self.send_message()
+    def get_space(self):
+        ActionChains(self.driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
 
     def get_message_with_keys(self, message):
         self.get_message_element().send_keys(message)
@@ -303,7 +346,6 @@ class CoreBot:
         self.send_message()
 
     def send_message(self):
-        #self.botao_enviar = self.driver.find_element_by_xpath('//SPAN[@data-icon=\'send\']').click()
         ActionChains(self.driver).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
 
     def get_message_element(self):
@@ -313,29 +355,42 @@ class CoreBot:
     def add_conversation(self, cv, cv_name):
         temp_role_ammount = self.get_role_ammount(cv_name)
 
-        conversations_to_listen.append({
+        self.conversations_to_listen.append({
             'conversation': cv, 
             'name_conversation': cv_name, 
             'id_conversation': self.current_count_conversation,
-            'conversation_role_ammount': temp_role_ammount
+            'conversation_role_ammount': temp_role_ammount,
+            'last_message': '',
+            'game_old': {
+                'game':[x for x in self.game.game_pixels],
+                'players': [],
+                'vacancies': 2,
+                'last_move' : ''
+                },
+            'game_chess': {
+                'game':[x for x in self.game.game_chess_pixels],
+                'players': [],
+                'vacancies': 2,
+                'last_move' : ''
+                }
             })
 
         temp_current_id = self.current_count_conversation
 
         if temp_current_id == 0:
-            self.bot_main.printi('WhatsApp web opened', 'core')
+            self.printi('WhatsApp web opened', 'core')
             self.bot_main.web_opened = True
-            self.bot_main.printi('%s contacts available...' % self.contacts_numbers, 'core')
+            self.printi('%s contacts available...' % self.contacts_numbers, 'core')
 
             self.set_conversation(cv_name)
             cv.click()
 
-        if len(conversations_to_listen) == self.contacts_numbers and not self.loaded_diary:
-            self.loaded_diary = True
-            self.bot_main.printi('Maybe new messages, refreshing and updating diary')
-            mouth.start(self)
+        # if len(self.conversations_to_listen) == self.contacts_numbers and not self.loaded_diary:
+        #     self.loaded_diary = True
+        #     self.printi('Maybe new messages, refreshing and updating diary')
+        #     self.mouth.start(self)
 
-        self.bot_main.printi('[id: %s - name: %s - events: %s] - conv added' % (temp_current_id, cv_name, temp_role_ammount), 'inline')
+        #self.printi('[id: %s - "%s" - events: %s] - conv added' % (temp_current_id, cv_name, temp_role_ammount), 'inline')
         self.current_count_conversation += 1
 
     current_timeout_set_conversation = 1
@@ -352,7 +407,7 @@ class CoreBot:
             except:
                 if self.current_timeout_set_conversation < 3:
                     self.current_timeout_set_conversation += 1
-                    self.bot_main.printi('Failed to set the conversation, trying again, attempt %s...' % self.current_timeout_set_conversation)
+                    self.printi('Failed to set the conversation, trying again, attempt %s...' % self.current_timeout_set_conversation)
                     self.set_conversation(cv_name)
                     return
                 else:
@@ -361,37 +416,37 @@ class CoreBot:
                     return
             
             self.current_timeout_set_conversation = 1
-            self.bot_main.printi('Changed to [id: %s - name: %s]' % (self.current_conversation['id_conversation'], cv_name), 'inline')
-            self.bot_main.last_message = ''
+            self.printi('Changed to [id: %s - "%s"]' % (self.current_conversation['id_conversation'], cv_name), 'inline')
+            #self.bot_main.last_message = ''
             
     def get_conversation(self):
         return self.current_conversation
 
     def get_conversations(self):
-        return conversations_to_listen
+        return self.conversations_to_listen
 
     def get_conversation_by_name(self, cv_name):
-        for d in conversations_to_listen:
+        for d in self.conversations_to_listen:
             if cv_name in d['name_conversation']:
                 return d
         return None
     
     def check_conversation_by_name(self, cv_name):
-        for d in conversations_to_listen:
+        for d in self.conversations_to_listen:
             if cv_name.lower() in d['name_conversation'].lower():
                 return d['name_conversation']
         return None
 
     def get_conversation_name_by_id(self, cv_id):
-        for d in conversations_to_listen:
-            if cv_id == conversations_to_listen[d].id:
+        for d in self.conversations_to_listen:
+            if cv_id == self.conversations_to_listen[d].id:
                 return d
 
     def get_current_role_ammount(self):
         temp_current_ammount = 0
         temp_cv_name = self.current_conversation['name_conversation']
 
-        for r in events.roles:
+        for r in self.events.roles:
             if temp_cv_name == r['conversation']:
                 temp_current_ammount += 1
         
@@ -401,7 +456,7 @@ class CoreBot:
         temp_current_ammount = 0
         temp_cv_name = self.current_conversation['name_conversation']
 
-        for r in supply.supplys:
+        for r in self.supply.supplys:
             if temp_cv_name == r['conversation']:
                 temp_current_ammount += 1
         
@@ -410,24 +465,24 @@ class CoreBot:
     def get_role_ammount(self, cv_name):
         temp_current_ammount = 0
 
-        for r in events.roles:
+        for r in self.events.roles:
             if cv_name == r['conversation']:
                 temp_current_ammount += 1
         
         return temp_current_ammount
 # Access Region
     def google_b(self):
-        return google
+        return self.google
 
     def load_configs(self):
-        temp_path = 'databases/configs.xml'
+        temp_path = self.root_path + 'databases/configs.xml'
 
         try:
             tree = ET.parse(temp_path)
             root = tree.getroot()
 
             for configs in root:
-                password = configs.attrib['password']
+                self.password = configs.attrib['password']
 
             temp_log = 'Configs loaded'
         except FileNotFoundError:
@@ -438,7 +493,48 @@ class CoreBot:
             ET.ElementTree(root).write(temp_path, encoding="UTF-8", xml_declaration=True)
             temp_log = 'Config file not found, creating one'
 
-        self.bot_main.printi(temp_log)
+        self.printi(temp_log)
+
+    def load_modules(self):
+        self.printi('Starting loading modules', 'core')
+
+        # Modules Started
+        self.brain = BotBrain('Brain', self)
+        self.ears = BotEars('Ears', self)
+        self.mouth = BotMouth('Mouth', self)
+
+        self.climate = BotClimate('Climate', self)
+        self.events = BotEvent('Events', self)
+        self.aid = BotHelp('Help', self)
+        self.images = BotImages('Images', self)
+        self.news = BotNews('News', self)
+        self.supply = BotSupply('Supply', self)
+        self.wiki = BotWikipedia('Wiki', self)
+
+        self.google = BotGoogle('Google', self)
+        self.media = BotMedia('Media', self)
+
+        self.game = BotGame('Game', self)
+
+        self.modules = [
+            self.brain,
+            self.ears,
+            self.mouth,
+
+            self.climate,
+            self.events,
+            self.aid,
+            self.images,
+            self.news,
+            self.supply,
+            self.wiki,
+            
+            self.google,
+            self.media,
+
+            self.game,
+        ]        
+        self.printi('Modules loaded successfully', 'core')
 
 # Admin Command Region
     def send_cmd(self, cmd, front, loading):
@@ -449,17 +545,17 @@ class CoreBot:
         arg = splited_command[2]
 
         if mod == 'diary':
-            for d in conversations_to_listen:
+            for d in self.conversations_to_listen:
                 temp_current_conversation = d['name_conversation']
 
-                if arg.lower() in temp_current_conversation.lower() and temp_current_conversation not in mouth.conversations:
-                    mouth.conversations.append(temp_current_conversation)
+                if arg.lower() in temp_current_conversation.lower() and temp_current_conversation not in self.mouth.conversations:
+                    self.mouth.conversations.append(temp_current_conversation)
 
                     if not loading:
-                        mouth.save_database(arg.lower())
+                        self.mouth.save_database_in(arg.lower())
 
-                    temp_debug = 'Conversation [id: %s - name: %s] - added to my diary news!' % (d['id_conversation'], d['name_conversation'])
-                    self.bot_main.printi(temp_debug)
+                    temp_debug = '%s - added to my diary news!' % d['name_conversation']
+                    self.printi(temp_debug)
 
                     if front:
                         self.get_message(temp_debug)
@@ -489,7 +585,7 @@ class CoreBot:
             temp_name_conv = self.check_conversation_by_name(temp_name_conv)
 
             if temp_name_conv is not None:
-                for module in modules:
+                for module in self.modules:
                     temp_module = str(module)
 
                     if arg.lower() in temp_module:
@@ -515,17 +611,15 @@ class CoreBot:
             ET.SubElement(root, 'conf', password=arg)
 
             ET.ElementTree(root).write('databases/configs.xml', encoding="UTF-8", xml_declaration=True)
-            self.bot_main.printi('Password changed successfully to %s' % arg)
+            self.printi('Password changed successfully to %s' % arg)
             return
 
-        for module in modules:
+        for module in self.modules:
             temp_module = str(module)
 
             if mod in temp_module:
                 module.command(arg)
                 temp_message = '%s bot setted to %s' % (mod, arg)
                 self.get_message(temp_message)
-                self.bot_main.printi(temp_message, 'core')
+                self.printi(temp_message, 'core')
                 break
-
-    print('DEBUG CORE: Soul Bot Initialized...')

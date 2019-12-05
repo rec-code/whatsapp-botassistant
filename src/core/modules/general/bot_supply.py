@@ -5,64 +5,36 @@ import xml.etree.cElementTree as ET
 from core.bot_modules_core import BotModulesCore 
 
 class BotSupply(BotModulesCore):
-    def __init__(self, name):
-        super(BotSupply, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotSupply, self).__init__(name, bot)
 
-    supplys = []
-    get_database_supply_path = "databases/supplys.xml"
+        self.cache_responses = [
+            'Então velho',
+            'Olha...',
+            'A lista de compra? Opa',
+            'Meu vegano, olha ai',
+            'Fala meu novembro choroso',
+            'Então meu malagueto',
+            'Então meu coração gelado',
+        ]
 
-    cache_responses = [
-        'Então velho',
-        'Olha...',
-        'A lista de compra? Opa',
-        'Meu vegano, olha ai',
-        'Fala meu novembro choroso',
-        'Então meu malagueto',
-        'Então meu coração gelado',
-    ]
+        self.groups_terms = [
+            'O piazada... Ceis vai faze o yakissoba hoje então??...',
+            'Compra do mês pro restaurante',
+            'Compra da família',
+            'Intera de churrasco',
+            'Churrasco vegano, lista de compra',
+        ]
+        self.get_database_supply_path = self.bot.root_path +  "databases/supplys.xml"
+        
+        self.supplys = []
 
-    groups_terms = [
-        'O piazada... Frutas e verduras, tlg...',
-        'Compra do mês pro restaurante',
-        'Compra da família',
-        'Intera de churrasco',
-        'Churrasco vegano lista de compra',
-    ]
+        try:
+            self.load_supplys()
 
-    try:
-        tree = ET.parse(get_database_supply_path)
-        root = tree.getroot()
-
-        for event in root:
-            temp_id = int(event.attrib['id'])
-            temp_infos = event[0].text
-            temp_date = datetime.strptime(event[1].text, '%Y-%m-%d %H:%M:%S')
-
-            temp_price = float(event[2].text)
-            temp_conversation = event[3].text
-            temp_total = float(event[4].text)
-
-            temp_supplys_str = event[5].text
-            temp_supplyers = {}
-
-            if temp_supplys_str != None:
-                for sup in temp_supplys_str.split('~~'):
-                    temp_s = sup.split(':')
-
-                    temp_supplyers[temp_s[0]] = float(temp_s[1])
-
-            supplys.append({
-                'id': len(supplys), 
-                'infos': temp_infos, 
-                'date': temp_date, 
-                'g_price': temp_price, 
-                'conversation': temp_conversation,
-                'total': temp_total,
-                'items': temp_supplyers,
-            })
-            print('DEBUG LOG:', 'Supply [id:', temp_id, '- conversation:', temp_conversation, '] - loaded')
-    except:
-        print('DEBUG LOG:', 'No supplys loaded')
+            self.printi('Supplys loaded successfully')
+        except:
+            self.printi('No supplys loaded')
 
     def supply(self, message, bot):
         if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
@@ -72,7 +44,7 @@ class BotSupply(BotModulesCore):
 
         message = message.split('\'')
         temp_supplys_list = self.supplys
-        print(message)
+        self.printi(message)
         date_now = datetime.now()
         temp_name_conversation = bot.current_conversation['name_conversation']
         temp_supply_id = None
@@ -102,7 +74,7 @@ class BotSupply(BotModulesCore):
                     temp_supply_id = 0
                     temp_len_message -= 1
                 else:
-                    bot.get_message('Algo errado aconteceu... Tem mais de uma intera né? Se sim, ce especificou o id?')
+                    bot.get_message('Algo errado aconteceu... Tem mais de uma lista né? Se sim, ce especificou o id?')
                     return
                 
         if len(temp_message_splited) == temp_len_message and temp_supply_id is not None:
@@ -111,7 +83,7 @@ class BotSupply(BotModulesCore):
                 return
 
             if temp_supply_id < 0 or temp_supply_id >= temp_current_supplys_ammount:
-                bot.get_message('Id da intera não encontrada, tente novamente guri')
+                bot.get_message('Id da lista não encontrada, tente novamente guri')
                 return
 
             temp_state = 'items'
@@ -154,7 +126,7 @@ class BotSupply(BotModulesCore):
                         bot.get_message('Velho, o valor não pode ser menor ou igual a zero, né po...')
                         return
                 except:
-                    bot.get_message('Man, se pá tu digitou o valor que tu vai interar errado')
+                    bot.get_message('Man, se pá tu digitou o valor que tu vai interar na lista errado')
                     return
                 
 
@@ -165,7 +137,7 @@ class BotSupply(BotModulesCore):
 
                         temp_infos = ''
                         
-                        print(r['infos'].split('\n'))
+                        self.printi(r['infos'].split('\n'))
 
                         for part in r['infos'].split('\n'):
                             if 'preço' in part.lower():
@@ -176,7 +148,7 @@ class BotSupply(BotModulesCore):
                         temp_infos = temp_infos[1:len(temp_infos)]
                         r['infos'] = temp_infos
 
-                        bot.get_message('Opa meu bacanal.. O preço da intera de id *%s* foi atualizado com sucesso, para R$ *%.2f* a grama, pode pá' % (temp_supply_id, temp_user_value))
+                        bot.get_message('Opa meu bacanal.. O preço da lista de id *%s* foi atualizado com sucesso, para R$ *%.2f* a grama, pode pá' % (temp_supply_id, temp_user_value))
                         return
 
                     if not temp_person_name in r[temp_state]:
@@ -214,7 +186,7 @@ class BotSupply(BotModulesCore):
                 for item in temp_list:  
                     bot.get_message_with_one_space('*%s* - R$ *_%.2f_* = *%s*' % (item, temp_list[item], self.get_weight_label(temp_list[item] / r['g_price'])))
                 
-                bot.get_message_with_one_space_before('*_Total atual da intera_*: R$ *_%.2f_* contos (*%s*)' % (temp_total, self.get_weight_label(temp_total / r['g_price'])))
+                bot.get_message_with_one_space_before('*_Total atual da lista_*: R$ *_%.2f_* contos (*%s*)' % (temp_total, self.get_weight_label(temp_total / r['g_price'])))
 
                 bot.send_message()
             else:
@@ -254,7 +226,7 @@ class BotSupply(BotModulesCore):
                         else:
                             sup[5].text = '%s:%s' % (temp_person_name, temp_user_value)
 
-                        print(sup[5].text)
+                        self.printi(sup[5].text)
                         sup[4].text = str(temp_total) 
                         break
 
@@ -311,13 +283,13 @@ class BotSupply(BotModulesCore):
             elif temp_remaing_days.days == 1:
                 temp_message_date = 'Amanhã'
 
-            temp_label = 'Intera: *%s*' % message[1].strip() + \
+            temp_label = 'Lista de compras: *%s*' % message[1].strip() + \
                          '\nMarcado para: *%s*' % temp_message_date + \
-                         '\nPreço da *_G_*: %s' % str('R$ *%.2f*' % temp_price) + \
+                         '\nPreço médio por *_G_* das hortaliças: %s' % str('R$ *%.2f*' % temp_price) + \
                          '\nHorário: *%s*' % date_time[1]
 
             bot.get_message(self.groups_terms[random.randint(0, len(self.groups_terms)-1 )])
-            response = temp_label + '\nSigilo hein rapeize, smc... E cuidado com essas poha de radin ai, carai!!!\n'
+            response = temp_label + '\nVai da um rangão bom hein, só os veganos onlines!!! Orgulho que não cabe\n'
             #bot.get_message('Para saber os roles marcados digite: domi role')
 
             temp_supplys_list.append({
@@ -328,8 +300,6 @@ class BotSupply(BotModulesCore):
                 'conversation': temp_name_conversation,
                 'total': float(0),
                 'items': {},
-#                    'not_confirmeds': [],
-#                    'not_confirmeds_yet': []
                 })
             try:
                 tree = ET.parse(self.get_database_supply_path)
@@ -354,11 +324,11 @@ class BotSupply(BotModulesCore):
             response = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )] + '... Não tem nenhuma lista de compra \n' \
                        'Digite: domi intera \'nome da intera\' \'preço da g(separado por \".\" e.g: *2.5*)\' data horário' \
                        '*\'nome da intera\'* entre aspas simples\n' \
-                       '*\'preço da g\'* apenas *números*, caso decimal, coloque um *.* para separar real dos centavos\n' \
+                       '*\'preço médio das gramas das hortaliças\'* apenas *números*, caso decimal, coloque um *.* para separar real dos centavos\n' \
                        '*data*(em formato padrão, ex: 20/04/2020, ano opcional) \n' \
                        '*horário* em horas:minutos(24 horas formato)\n' \
                        'Ex: *domi intera \'salada vegan\' \'2.2\' 26/11 16:20*\n' \
-                       'Note que você não precisa colocar intera no nome e toda intera, fica disponível para registro, até a data e hora da intera'
+                       #'Note que você não precisa colocar intera no nome e toda intera, fica disponível para registro, até a data e hora da intera'
 
             if len(temp_supplys_list) > 0:
                 temp_has_supply = False
@@ -368,7 +338,7 @@ class BotSupply(BotModulesCore):
                 if temp_supply_id == None:
                     temp_ammount_role = bot.get_current_supply_ammount()
                 elif temp_supply_id < 0 or temp_supply_id >= bot.get_current_supply_ammount():
-                    response = 'Id da intera não encontrado, tente novamente guri :-p'
+                    response = 'Id da lista não encontrado, tente novamente guri :-p'
 
                 for r in temp_supplys_list:
                     if r['conversation'] != temp_name_conversation:
@@ -384,11 +354,11 @@ class BotSupply(BotModulesCore):
                         if temp_ammount_role > 1:
                             bot.get_message('Então pia, no sapatin, fraga nas situação:')
                         else:
-                            bot.get_message('Vdd pia, a intera ai:')
+                            bot.get_message('Vdd pia, a lista vegana ai:')
 
                         temp_has_supply = True
 
-                    temp_id_role_label = 'Intera id: *%s*' % current_supply_id
+                    temp_id_role_label = 'Vegan id: *%s*' % current_supply_id
 
                     temp_remaing_days = r['date'] - date_now
 
@@ -416,7 +386,7 @@ class BotSupply(BotModulesCore):
                             bot.get_message_with_two_spaces(part)
 
                         if r['total'] != 0:
-                            bot.get_message_with_keys('*_Total atual da intera_*: R$ *_%.2f_* contos (*%s*)' % (r['total'], self.get_weight_label(r['total'] / r['g_price'])))
+                            bot.get_message_with_keys('*_Total atual da lista_*: R$ *_%.2f_* contos (*%s*)' % (r['total'], self.get_weight_label(r['total'] / r['g_price'])))
 
                         bot.send_message()
 
@@ -425,7 +395,7 @@ class BotSupply(BotModulesCore):
 
                             for con in r['items']:
                                 if temp_current_id_list == 0:
-                                    bot.get_message_with_one_space('*_Galera da intera_*:')
+                                    bot.get_message_with_one_space('*_Galera da lista_*:')
 
                                 temp_current_id_list += 1
                                 bot.get_message_with_one_space_before('%s - *%s* - R$ *%.2f* contos = *%s*' % (temp_current_id_list, con, r['items'][con], self.get_weight_label(r['items'][con] / r['g_price'])))
@@ -435,8 +405,9 @@ class BotSupply(BotModulesCore):
                         temp_supply_name = ''
 
                         for part in temp_sentence.split('\n'):
-                            if 'intera' in part.lower():
+                            if 'intera' in part.lower() or 'lista' in part.lower():
                                 temp_supply_name = part.replace('Intera: ', '')
+                                temp_supply_name = part.replace('Lista de compras: ', '')
 
                         bot.get_message('%s - %s - %s' % (temp_id_role_label, temp_supply_name, temp_message_date))
 
@@ -460,6 +431,43 @@ class BotSupply(BotModulesCore):
             bot.get_message_with_two_spaces(part)
 
         bot.send_message()
+
+    def load_supplys(self):
+        amount = 0
+
+        tree = ET.parse(self.get_database_supply_path)
+        root = tree.getroot()
+
+        for event in root:
+            temp_id = int(event.attrib['id'])
+            temp_infos = event[0].text
+            temp_date = datetime.strptime(event[1].text, '%Y-%m-%d %H:%M:%S')
+
+            temp_price = float(event[2].text)
+            temp_conversation = event[3].text
+            temp_total = float(event[4].text)
+
+            temp_supplys_str = event[5].text
+            temp_supplyers = {}
+
+            if temp_supplys_str != None:
+                for sup in temp_supplys_str.split('~~'):
+                    temp_s = sup.split(':')
+
+                    temp_supplyers[temp_s[0]] = float(temp_s[1])
+
+            self.supplys.append({
+                'id': len(self.supplys), 
+                'infos': temp_infos, 
+                'date': temp_date, 
+                'g_price': temp_price, 
+                'conversation': temp_conversation,
+                'total': temp_total,
+                'items': temp_supplyers,
+            })
+            amount += 1
+
+        self.printi('Loaded %s supplys' % amount)
 
     def get_weight_label(self, weight):
         temp_weight_division = round(weight / 1000, 3)

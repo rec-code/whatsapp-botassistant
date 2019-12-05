@@ -2,9 +2,8 @@ from core.bot_modules_core import BotModulesCore
 from selenium.common.exceptions import NoSuchElementException
 
 class BotMedia(BotModulesCore):
-
-	def __init__(self, name):
-		super(BotMedia, self).__init__(name)
+	def __init__(self, name, bot):
+		super(BotMedia, self).__init__(name, bot)
 
 	def search(self, message, domain_search, bot):
 		if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):

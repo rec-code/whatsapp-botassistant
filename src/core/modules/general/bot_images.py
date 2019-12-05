@@ -1,5 +1,7 @@
 import time, wget, win32clipboard, random
+#import time, wget, random
 
+from selenium.common.exceptions import NoSuchElementException
 from core.bot_modules_core import BotModulesCore 
 from io import BytesIO
 from PIL import Image
@@ -10,8 +12,8 @@ from urllib.error import HTTPError, URLError
 
 
 class BotImages(BotModulesCore):
-	def __init__(self, name):
-		super(BotImages, self).__init__(name)
+	def __init__(self, name, bot):
+		super(BotImages, self).__init__(name, bot)
 
 	retrieve_times_allowed = 3
 	current_timeout = 1
@@ -26,11 +28,11 @@ class BotImages(BotModulesCore):
 			link = images_links[tp_rd]
 			images_links.remove(link)
 			
-			tp_img = self.try_download(link, bot.root_path + '\\media\\images', bot)
+			tp_img = self.try_download(link, bot.root_path + 'media/images', bot)
 
 			if tp_img is not None:
 				if tp_img[len(tp_img)-5:] == '.wget':
-					bot.bot_main.printi('Image with .wget format', 'inline')
+					self.printi('Image with .wget format', 'inline')
 					#raise Exception('Invalid image format data')
 					continue
 
@@ -41,12 +43,12 @@ class BotImages(BotModulesCore):
 				# else:
 				# 	temp_image = tp_img
 
-				bot.bot_main.printi('Image downloaded succesfully on attempt %s' % self.current_timeout, 'inline')
+				self.printi('Image downloaded succesfully on attempt %s' % self.current_timeout, 'inline')
 			else:
 				continue
 
 		if len(temp_image) == 0:
-			bot.bot_main.printi('Failed to download the image')
+			self.printi('Failed to download the image')
 		
 		self.current_timeout = 1
 
@@ -56,10 +58,10 @@ class BotImages(BotModulesCore):
 		tp_img = None
 
 		try:
-			bot.bot_main.printi('Trying download image: %s' % link[len(link)-20:], 'inline')
+			self.printi('Trying download image: %s' % link[len(link)-20:], 'inline')
 			tp_img = wget.download(link, path)
 		except (URLError, HTTPError) as e:
-			bot.bot_main.printi('Image %s not downloaded succesfully, trying another' % link[len(link)-20:], 'inline')
+			self.printi('Image %s not downloaded succesfully, trying another' % link[len(link)-20:], 'inline')
 			
 		return tp_img
 
@@ -70,24 +72,60 @@ class BotImages(BotModulesCore):
 		count = 0
 
 		while count < len(images_names):
-			bot.bot_main.printi('Trying get images elements, attempt %s' % self.current_timeout, 'inline')
+			self.printi('Trying get images elements, attempt %s' % self.current_timeout, 'inline')
 
 			try:
 				image = Image.open(images_names[count])
 			except IOError:
-				bot.bot_main.printi('Bones for this image')
+				self.printi('Bones for this image')
 				count += 1
 				continue
 
-			output = BytesIO()
-			image.convert("RGB").save(output, "BMP")
-			data = output.getvalue()[14:]
-			output.close()
+			if self.bot.system != 'Linux':
+				output = BytesIO()
+				image.convert("RGB").save(output, "BMP")
+				data = output.getvalue()[14:]
+				output.close()
+				self.send_to_clipboard(win32clipboard.CF_DIB, data)
+				
+				ActionChains(bot.driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+			else:
+				self.printi('Getting galery_button')
+				media_button = bot.driver.find_element_by_css_selector('div._2kYeZ').find_elements_by_css_selector('div._3j8Pd')[1]
+				media_button.click()
 
-			self.send_to_clipboard(win32clipboard.CF_DIB, data)
-			ActionChains(bot.driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+				self.printi('Button clicked')
+				galery_button = None
+				temp_counter = 0
+				self.printi('Clicking on media button')
+				
+				temp_link = images_names[count].replace('/', '\\').replace('\\mnt\\d', 'd:')
+				#clipboard.copy(temp_link)
 
-			bot.bot_main.printi('Images elements get succesfully on attempt %s' % self.current_timeout, 'inline')
+				while galery_button is None and temp_counter < 15:
+					try:
+						galery_button = media_button.find_element_by_xpath('(//BUTTON[@class=\'Ijb1Q\'])[1]')
+						self.printi('Media button founded, opening windows explorer')
+						galery_button.send_keys(temp_link)
+						#galery_button.click()
+					except NoSuchElementException:
+						pass
+
+					temp_counter += .01
+				
+				handle = "[CLASS:#32770; TITLE:Open]"
+				autoit.win_wait(handle, 60)
+				autoit.control_set_text(handle, "Edit1", temp_link)
+				autoit.control_click(handle, "Button1")
+			#subprocess.call([self.bot.root_path + 'src/start_test.bat'])
+			
+			#clipboard.paste()
+
+			#self.send_to_clipboard(win32clipboard.CF_DIB, data)
+			
+			#ActionChains(bot.driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+
+			self.printi('Images elements get succesfully on attempt %s' % self.current_timeout, 'inline')
 			success = True
 			count += 1
 			time.sleep(1)
@@ -100,7 +138,7 @@ class BotImages(BotModulesCore):
 			# 	return
 
 		if self.current_timeout == self.retrieve_times_allowed:
-			bot.bot_main.printi('Failed to get images elements')
+			self.printi('Failed to get images elements')
 
 		if success:
 			self.send_image(bot, message)
@@ -109,23 +147,23 @@ class BotImages(BotModulesCore):
 
 	def send_image(self, bot, message):
 		try:
-			bot.bot_main.printi('Trying send images, attempt %s' % self.current_timeout, 'inline')
+			self.printi('Trying send images, attempt %s' % self.current_timeout, 'inline')
 			#bot.driver.find_element_by_xpath("(//DIV[@class='_3u328 copyable-text selectable-text'])[1]").send_keys(message)
 			#time.sleep(.5)
 			# bot.driver.find_element_by_xpath("//SPAN[@data-icon='send-light']").click()
 			ActionChains(bot.driver).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
-			bot.bot_main.printi('Image sended succesfully on attempt %s' % self.current_timeout, 'inline')
+			self.printi('Image sended succesfully on attempt %s' % self.current_timeout, 'inline')
 		except:
 			if self.current_timeout < self.retrieve_times_allowed:
 				time.sleep(.5)
 				self.current_timeout += 1
-				bot.bot_main.printi('Failed to send image, trying again, attempt %s' % self.current_timeout)
+				self.printi('Failed to send image, trying again, attempt %s' % self.current_timeout)
 				time.sleep(.5)
 				self.send_image(bot, message)
 				return
 
 		if self.current_timeout == self.retrieve_times_allowed:
-			bot.bot_main.printi('Failed to send image')
+			self.printi('Failed to send image')
 
 		self.current_timeout = 1
 

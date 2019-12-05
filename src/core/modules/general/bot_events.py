@@ -4,70 +4,43 @@ from datetime import datetime
 import xml.etree.cElementTree as ET
 
 class BotEvent(BotModulesCore):
-    def __init__(self, name):
-        super(BotEvent, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotEvent, self).__init__(name, bot)
 
-    roles = []
+        self.time_to_delete_role = 1440 * 60 # 24 hours to seconds = 86.400 seconds
+        self.label_time_delete_role = int((self.time_to_delete_role / 60) / 60)
+        self.printi('Setted [%s hours - %s seconds] to delete the role...' % (self.label_time_delete_role, self.time_to_delete_role))
 
-    time_to_delete_role = 1440 * 60 # 24 hours to seconds = 86.400 seconds
-    label_time_delete_role = int((time_to_delete_role / 60) / 60)
-    print('DEBUG CORE: Setted [%s hours - %s seconds] to delete the role...' % (label_time_delete_role, time_to_delete_role))
-    get_database_role_path = "databases/roles.xml"
-    get_database_roles_done_path = "databases/roles_done.xml"
+        self.cache_responses = [
+            'Fala mestre',
+            'Po, uma bagona monstra, né não mestre, mas xofala',
+            'Então gurizão',
+            'Fala meus pentelhos',
+            'Meus obliterados',
+            'Então meu cheetos bola',
+            'Fala amor da minha vida',
+        ]
 
-    cache_responses = [
-        'Fala mestre',
-        'Po, uma bagona monstra, né não mestre, mas xofala',
-        'Então gurizão',
-        'Fala meus pentelhos',
-        'Meus obliterados',
-        'Então meu cheetos bola',
-        'Fala amor da minha vida',
-    ]
+        self.groups_terms = [
+            'Boa meus felas, ai eu do valor',
+            'Ai sim mestres, bagona monstra né não',
+            'Huuuuuum, hoje tem rataria é???????',
+            'Ratones, uma boa pa nois',
+            'Placdum meus exterminadores',
+        ]
+        
+        self.get_database_role_path = self.bot.root_path + "databases/roles.xml"
+        self.get_database_roles_done_path = self.bot.root_path + "databases/roles_done.xml"
 
-    groups_terms = [
-        'Boa meus felas, ai eu do valor',
-        'Ai sim mestres, bagona monstra né não',
-        'Huuuuuum, hoje tem rataria é???????',
-        'Ratones, uma boa pa nois',
-        'Placdum meus exterminadores',
-    ]
+        self.roles = []
+        self.roles_done = []
 
-    try:
-        tree = ET.parse(get_database_role_path)
-        root = tree.getroot()
-
-        for event in root:
-            temp_id = int(event.attrib['id'])
-            temp_infos = event[0].text
-            temp_remainder = int(event[1].text)
-            temp_date = datetime.strptime(event[2].text, '%Y-%m-%d %H:%M:%S')
-            temp_remaind = int(event[3].text)
-            temp_conversation = event[4].text
-
-            temp_confirmeds = event[5].text
-            temp_confirmeds = [] if temp_confirmeds == None else temp_confirmeds.split('~~')
-
-            temp_not_confirmeds = event[6].text
-            temp_not_confirmeds = [] if temp_not_confirmeds == None else temp_not_confirmeds.split('~~')
-
-            temp_not_confirmed_yet = event[7].text
-            temp_not_confirmed_yet = [] if temp_not_confirmed_yet == None else temp_not_confirmed_yet.split('~~')
-
-            roles.append({
-                'id': temp_id, 
-                'infos': temp_infos, 
-                'remainder': temp_remainder, 
-                'date': temp_date, 
-                'remaind': temp_remaind, 
-                'conversation': temp_conversation,
-                'confirmeds': temp_confirmeds,
-                'not_confirmeds': temp_not_confirmeds,
-                'not_confirmeds_yet': temp_not_confirmed_yet
-                })
-            print('DEBUG LOG:', 'Event [id:', temp_id, '- conversation:', temp_conversation, '] - loaded')
-    except:
-        print('DEBUG LOG:', 'No events loaded')
+        try:
+            self.load_events()
+            
+            self.printi('Events loaded successfully')
+        except:
+            self.printi('No events loaded')
 
     def events(self, message, bot):
         if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):
@@ -98,20 +71,24 @@ class BotEvent(BotModulesCore):
                 return
 
         temp_len_message = 3
+        show_all = False
 
         if len(temp_message_splited) == 2 or len(temp_message_splited) == temp_len_message:
-            try:
-                temp_role_id = int(temp_message_splited[len(temp_message_splited) - 1])
-            except ValueError:
+            temp_parameter = temp_message_splited[len(temp_message_splited) - 1]
 
-                if temp_current_role_ammount == 1:
+            try:
+                temp_role_id = int(temp_parameter)
+            except ValueError:
+                if 'all' in temp_parameter.lower():
+                    show_all = True
+                elif temp_current_role_ammount == 1:
                     temp_role_id = 0
                     temp_len_message -= 1
                 else:
                     bot.get_message('Algo errado aconteceu... Tem mais de um rolê né? Se sim, ce especificou o id?')
                     return
 
-        if len(temp_message_splited) == temp_len_message and temp_role_id is not None:
+        if len(temp_message_splited) == temp_len_message and (temp_role_id is not None and not show_all):
             if temp_current_role_ammount == 0:
                 bot.get_message('Nenhum rolê ativo no momento pra ti ta confirmando ou não tua presença')
                 return
@@ -366,7 +343,7 @@ class BotEvent(BotModulesCore):
                        'Ex: *domi marcar \'fumar um beckão\' \'na baia\' 24/11 16:20 10*\n' \
                        'Note que você não precisa colocar rolê no nome do evento e todo rolê marcado, fica disponível para registro, até *%s horas* a partir do horário de início do rolê <3' % self.label_time_delete_role
 
-            if len(temp_roles_list) > 0:
+            if len(temp_roles_list) > 0 or (len(self.roles_done) > 0 and show_all):
                 temp_has_event = False
                 temp_current_role_id = 0
                 temp_ammount_role = 1
@@ -376,7 +353,12 @@ class BotEvent(BotModulesCore):
                 elif temp_role_id < 0 or temp_role_id >= bot.get_current_role_ammount():
                     response = 'Id do rolê não encontrado, tente novamente guri :-p'
 
-                for r in temp_roles_list:
+                temp_events = [x for x in temp_roles_list]
+
+                if show_all:
+                    temp_events.extend(x for x in self.roles_done)
+
+                for r in temp_events:
                     if r['conversation'] != temp_name_conversation:
                         continue
                     
@@ -387,10 +369,13 @@ class BotEvent(BotModulesCore):
                         continue
 
                     if not temp_has_event:
-                        if temp_ammount_role > 1:
-                            bot.get_message('Salve meu meninão, da uma checada maneira nos rolês ai <3:')
+                        if not show_all:
+                            if temp_ammount_role > 1:
+                                bot.get_message('Salve meu meninão, da uma checada maneira nos rolês ai <3:')
+                            else:
+                                bot.get_message('Fala guri, da um zói no rolê ai <3:')
                         else:
-                            bot.get_message('Fala guri, da um zói no rolê ai <3:')
+                            bot.get_message('Boa, os rolês passados:')
 
                         temp_has_event = True
 
@@ -400,7 +385,7 @@ class BotEvent(BotModulesCore):
 
                     temp_message_date = 'o dia ' + str(r['date'].date().strftime("%d de %b de %Y"))
 
-                    if temp_ammount_role > 1:
+                    if temp_ammount_role > 1 or show_all:
                         temp_message_date = temp_message_date.replace('o dia', 'dia')
 
                     if temp_remaing_days.days == 0:
@@ -412,7 +397,7 @@ class BotEvent(BotModulesCore):
 
                     temp_sentence = r['infos']
 
-                    if temp_ammount_role == 1:
+                    if temp_ammount_role == 1 and not show_all:
                         bot.get_message_with_two_spaces(temp_id_role_label)
 
                         for part in temp_sentence.split('\n'):
@@ -456,12 +441,17 @@ class BotEvent(BotModulesCore):
 
                         for part in temp_sentence.split('\n'):
                             if 'rolê' in part.lower():
-                                temp_role_name = part.replace('Rolê: ', '')
+                                if not show_all:
+                                    temp_role_name = part.replace('Rolê: ', '')
+                                else:
+                                    temp_role_name = part
 
-                        bot.get_message('%s - %s - %s' % (temp_id_role_label, temp_role_name, temp_message_date))
-
+                        if not show_all:
+                            bot.get_message('%s - %s - %s' % (temp_id_role_label, temp_role_name, temp_message_date))
+                        else:
+                            bot.get_message('%s - %s' % (temp_role_name, temp_message_date))
                 if temp_has_event:
-                    if temp_ammount_role > 1:
+                    if temp_ammount_role > 1 and not show_all:
                         response = 'Para mais detalhes do evento, digite: domi role *<id do role>*'
                     else:
                         response = ''
@@ -496,20 +486,22 @@ class BotEvent(BotModulesCore):
                     r['remaind'] -= 1
 
                     if r['remaind'] == 0:
-                        print('DEBUG LOG: Avisando que o rolê já começou: ', r['infos'])
-                        temp_resp = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )] + ', ta tendo rolê já faz '
+                        self.printi('DEBUG LOG: Avisando que algum rolê já começou')
+                        temp_resp = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )]
                     else:
-                        print('DEBUG LOG: Avisando que o rolê vai começar: ', r['infos'])
-                        temp_resp = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )] + ', vai te rolê em '
+                        self.printi('DEBUG LOG: Avisando que algum rolê vai começar')
+                        temp_resp = self.cache_responses[random.randint(0, len(self.cache_responses)-1 )]
 
-                    temp_label_minutes = ' minutos'
+                    # temp_label_minutes = ' minutos'
 
-                    if int(r['remainder']) == 1:
-                        temp_label_minutes = ' minuto'
+                    # if int(r['remainder']) == 1:
+                    #     temp_label_minutes = ' minuto'
 
-                    response = temp_resp + str(r['remainder']) + temp_label_minutes +', saca as infos:\n' + \
-                        r['infos']
+                    # response = temp_resp + str(r['remainder']) + temp_label_minutes +', saca as infos:\n' + \
+                    #     r['infos']
 
+                    response = temp_resp
+                    
                     bot.set_conversation(r['conversation'])
                     #bot.get_message(response)
                     temp_message_date = ''
@@ -531,9 +523,9 @@ class BotEvent(BotModulesCore):
                     break
             
             if time_remaing_second.days >= 1:
-                print('DEBUG LOG: Role %s deletado' % r)
+                self.printi('Event %s, of %s moved to done' % (r['id'], r['conversation']))
                 bot.set_conversation(r['conversation'])
-                bot.get_message('Salve meus raposos, lembra do role:')
+                bot.get_message('Salve meus raposos, como é que foi o rolê ontem??')
 
                 for part in r['infos'].split('\n'):
                     if 'rolê' in part.lower():
@@ -552,8 +544,8 @@ class BotEvent(BotModulesCore):
                     if 'marcado' in part.lower():
                         temp_message_date = 'Marcado para: %s' % temp_message_date
 
-                bot.get_message('Rolê %s - *%s*' % (temp_role_name, temp_message_date))
-                bot.get_message('Então... Ele foi deletado. Espero que tenham/estejam curtido/curtindo o bagui, \n*Uma boa pa nóis famia!!!*')
+                bot.get_message('%s - *%s*' % (temp_role_name, temp_message_date))
+                #bot.get_message('Então... Ele foi deletado. Espero que tenham/estejam curtido/curtindo o bagui, \n*Uma boa pa nóis famia!!!*')
 
                 #self.events('domi deletar role %s')
                 tree = ET.parse(self.get_database_role_path)
@@ -590,7 +582,53 @@ class BotEvent(BotModulesCore):
                 self.roles.remove(r)
 
                 if len(self.roles) != 0:
-                    print('DEBUG LOG: Rolês ainda existentes: ', len(self.roles))
+                    self.printi('DEBUG LOG: Rolês ainda existentes: ', len(self.roles))
                 else:
-                    print('DEBUG LOG: Nenhum rolê restante')
+                    self.printi('DEBUG LOG: Nenhum rolê restante')
                 break
+
+    def load_events(self):
+        tree = ET.parse(self.get_database_role_path)
+        root = tree.getroot()
+        amount = self.load_events_back(root, self.roles)
+        self.printi('Loaded %s actived events' % amount)
+
+        tree = ET.parse(self.get_database_roles_done_path)
+        root = tree.getroot()
+        amount = self.load_events_back(root, self.roles_done)
+        self.printi('Loaded %s done events' % amount)
+
+    def load_events_back(self, root, lst):
+        amount = 0
+
+        for event in root:
+            temp_id = int(event.attrib['id'])
+            temp_infos = event[0].text
+            temp_remainder = int(event[1].text)
+            temp_date = datetime.strptime(event[2].text, '%Y-%m-%d %H:%M:%S')
+            temp_remaind = int(event[3].text)
+            temp_conversation = event[4].text
+
+            temp_confirmeds = event[5].text
+            temp_confirmeds = [] if temp_confirmeds == None else temp_confirmeds.split('~~')
+
+            temp_not_confirmeds = event[6].text
+            temp_not_confirmeds = [] if temp_not_confirmeds == None else temp_not_confirmeds.split('~~')
+
+            temp_not_confirmed_yet = event[7].text
+            temp_not_confirmed_yet = [] if temp_not_confirmed_yet == None else temp_not_confirmed_yet.split('~~')
+
+            lst.append({
+                'id': temp_id, 
+                'infos': temp_infos, 
+                'remainder': temp_remainder, 
+                'date': temp_date, 
+                'remaind': temp_remaind, 
+                'conversation': temp_conversation,
+                'confirmeds': temp_confirmeds,
+                'not_confirmeds': temp_not_confirmeds,
+                'not_confirmeds_yet': temp_not_confirmed_yet
+                })
+            amount += 1
+
+        return amount

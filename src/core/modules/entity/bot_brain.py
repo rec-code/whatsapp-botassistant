@@ -2,8 +2,8 @@ import time
 from core.bot_modules_core import BotModulesCore 
 
 class BotBrain(BotModulesCore):
-    def __init__(self, name):
-        super(BotBrain, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotBrain, self).__init__(name, bot)
 
     def learn(self, message, bot):
         if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):

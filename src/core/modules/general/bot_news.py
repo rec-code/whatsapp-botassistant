@@ -5,32 +5,28 @@ from core.bot_modules_core import BotModulesCore
 
 
 class BotNews(BotModulesCore):
-    def __init__(self, name):
-        super(BotNews, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotNews, self).__init__(name, bot)
+        self.get_database_credentials_path = self.bot.root_path + "databases/credentials.xml"
 
-    get_database_credentials_path = "databases/credentials.xml"
+        self.cache_responses = [
+            'Fala mestre',
+            'Po, uma bagona monstra, né não mestre, mas xofala',
+            'Então gurizão',
+            'Fala meus pentelhos',
+            'Meus obliterados',
+            'Então meu cheetos bola',
+            'Fala amor da minha vida',
+        ]
 
-    api_key_news = ''
-    apiv2_key_news = ''
-
-    tree = ET.parse(get_database_credentials_path)
-    root = tree.getroot()
-    
-    for cred in root:
-        if cred.attrib['name'] == 'news':
-            api_key_news = cred[0].text
-            apiv2_key_news = cred[1].text
-            print('DEBUG CORE: News credentials loaded')
-
-    cache_responses = [
-        'Fala mestre',
-        'Po, uma bagona monstra, né não mestre, mas xofala',
-        'Então gurizão',
-        'Fala meus pentelhos',
-        'Meus obliterados',
-        'Então meu cheetos bola',
-        'Fala amor da minha vida',
-    ]
+        tree = ET.parse(self.get_database_credentials_path)
+        root = tree.getroot()
+        
+        for cred in root:
+            if cred.attrib['name'] == 'news':
+                self.api_key_news = cred[0].text
+                self.apiv2_key_news = cred[1].text
+                self.printi('News credentials loaded', 'core')
 
     def news_tech(self, bot):
         if not self.enabled or self.is_in_black_list(bot.current_conversation['name_conversation']):

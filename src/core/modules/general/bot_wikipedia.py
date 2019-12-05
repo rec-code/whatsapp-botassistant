@@ -2,12 +2,11 @@ import wikipedia, time
 
 from core.bot_modules_core import BotModulesCore 
 
-wikipedia.set_lang("pt")
-
 
 class BotWikipedia(BotModulesCore):
-    def __init__(self, name):
-        super(BotWikipedia, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotWikipedia, self).__init__(name, bot)
+        wikipedia.set_lang("pt")
 
     wiki_request = {}
 

@@ -1,16 +1,10 @@
-class BotSupply:
-    print('DEBUG CORE: Initializing Base Bot...')
-    enabled = True
-    black_list = []
-    
+from core.bot_modules_core import BotModulesCore 
+
+
+class BotBase(BotModulesCore):
+    def __init__(self, name):
+        super(BotBase, self).__init__(name)
+
     def base(self, bot):
         if not self.enabled:
             return
-
-    def command(self, arg):
-        self.enabled = True if arg == 'true' else False
-    
-    def is_in_black_list(self, current):
-        return True if current in self.black_list else False
-
-    print('DEBUG CORE: Base Bot Initialized...')

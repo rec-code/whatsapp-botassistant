@@ -3,20 +3,18 @@ import requests, json, time, random
 import xml.etree.cElementTree as ET
 
 class BotClimate(BotModulesCore):
-    def __init__(self, name):
-        super(BotClimate, self).__init__(name)
+    def __init__(self, name, bot):
+        super(BotClimate, self).__init__(name, bot)
 
-    get_database_credentials_path = "databases/credentials.xml"
+        self.get_database_credentials_path = self.bot.root_path + "databases/credentials.xml"
 
-    api_key_climate = ''
+        tree = ET.parse(self.get_database_credentials_path)
+        root = tree.getroot()
 
-    tree = ET.parse(get_database_credentials_path)
-    root = tree.getroot()
-
-    for cred in root:
-        if cred.attrib['name'] == 'climate':
-            api_key_climate = cred[0].text
-            print('DEBUG CORE: Climate credentials loaded')
+        for cred in root:
+            if cred.attrib['name'] == 'climate':
+                self.api_key_climate = cred[0].text
+                self.printi('Climate credentials loaded', 'core')
 
     cache_responses = [
         'Fala mestre',
