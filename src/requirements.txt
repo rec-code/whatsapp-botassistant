@@ -12,7 +12,7 @@ idna==2.7
 mathparse==0.1.2
 nltk==3.4.5
 oauthlib==2.1.0
-Pillow==6.2.0
+Pillow==9.0.0
 PyAutoGUI==0.9.47
 pymongo==3.7.2
 python-dateutil==2.6.1
